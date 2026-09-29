@@ -891,15 +891,13 @@ function reprocessarAposAtualizarCodigos() {
   renderErros();
   renderIcs();
   renderRelacao();
-}
-function processarIcsIndependente(jsonIcs) {
+}function processarIcsIndependente(jsonIcs) {
   STORE.ics = [];
   
   const lotesDuplicadosNaRelacao = new Set(
     STORE.erros.filter(e => e.categoria === 'LOTE DUPLICADO').map(e => normLote(e.lote))
   );
 
-  // Criamos um conjunto com todos os lotes válidos da Relação para validação cruzada
   const lotesRelacaoSet = new Set(
     STORE.relacao ? STORE.relacao.map(r => normLote(r.lote)) : []
   );
@@ -913,20 +911,30 @@ function processarIcsIndependente(jsonIcs) {
     const loteBruto = val(linha, ['REV', 'Lote/ID AWB Master', 'LOTE/ MASTER', 'LOTE / MASTER', 'LOTE/MASTER', 'LOTE', 'MASTER', 'A', 'LOTE INDÚSTRIA', 'LOTE INDUSTRIA', 'RECUSAS', 'PAR']);
     const lote = normLote(loteBruto);
     
-    let palletIcs = norm(val(linha, ['PALET', 'PALLET', 'PALLETE', 'PALETE', 'Nº PALLET', 'PAR', 'LACRES', 'PALLET ']));
-    
     if(!lote && !awb) return;
 
+    // --- CORREÇÃO DA BUSCA DO PALLET ---
+    // 1. Tenta buscar nas colunas comuns de pallet/par/lacre do ICS
+    let palletIcs = norm(val(linha, ['PALET', 'PALLET', 'PALLETE', 'PALETE', 'Nº PALLET', 'PAR', 'LACRES', 'PALLET ', 'ENDEREÇO', 'ENDERECO']));
     let palletFinal = palletIcs;
-    if (!palletFinal || palletFinal === '' || palletFinal === 'N/A') {
-      const relMatch = STORE.relacao.find(r => normLote(r.lote) === lote || normLote(r.lote) === normLote(loteBruto));
+
+    // 2. Se não encontrou no ICS, busca diretamente na Relação cruzando pelo lote ou lote bruto
+    if (!palletFinal || palletFinal === '' || palletFinal === 'N/A' || palletFinal === '—') {
+      const relMatch = STORE.relacao.find(r => 
+        normLote(r.lote) === lote || 
+        normLote(r.lote) === normLote(loteBruto) ||
+        String(r.lote).trim() === String(loteBruto).trim()
+      );
+      
       if (relMatch) {
-        palletFinal = norm(relMatch.pallet || relMatch.pallete || relMatch.par || relMatch.lacres);
+        palletFinal = norm(relMatch.pallet || relMatch.pallete || relMatch.par || relMatch.lacres || relMatch.endereco);
       }
     }
-    if (!palletFinal) palletFinal = 'N/A';
+    
+    // Se continuar vazio, define como 'N/A' para evitar que fique em branco
+    if (!palletFinal || palletFinal === '') palletFinal = 'N/A';
+    // -----------------------------------
 
-    // Validação: Se o lote do ICS NÃO estiver na Relação, registra o erro e ignora o item
     if (lotesRelacaoSet.size > 0 && !lotesRelacaoSet.has(lote)) {
       registrarErro(
         'LOTE NAO LOCALIZADO NA RELACAO', 
@@ -964,7 +972,15 @@ function processarIcsIndependente(jsonIcs) {
       return; 
     }
 
-    STORE.ics.push({produto, awb, lote: String(loteBruto).trim().toUpperCase(), pallet: palletFinal, altura: '—', categoria: '—'});
+    // Salva o objeto com o pallet garantido
+    STORE.ics.push({
+      produto, 
+      awb, 
+      lote: String(loteBruto).trim().toUpperCase(), 
+      pallet: palletFinal, 
+      altura: '—', 
+      categoria: '—'
+    });
   });
   
   if (STORE.relacao && STORE.relacao.length > 0) {
