@@ -898,6 +898,11 @@ function processarIcsIndependente(jsonIcs) {
   const lotesDuplicadosNaRelacao = new Set(
     STORE.erros.filter(e => e.categoria === 'LOTE DUPLICADO').map(e => normLote(e.lote))
   );
+
+  // Criamos um conjunto com todos os lotes válidos da Relação para validação cruzada
+  const lotesRelacaoSet = new Set(
+    STORE.relacao ? STORE.relacao.map(r => normLote(r.lote)) : []
+  );
   
   const chavesIcsSet = new Set();
   
@@ -920,6 +925,19 @@ function processarIcsIndependente(jsonIcs) {
       }
     }
     if (!palletFinal) palletFinal = 'N/A';
+
+    // Validação: Se o lote do ICS NÃO estiver na Relação, registra o erro e ignora o item
+    if (lotesRelacaoSet.size > 0 && !lotesRelacaoSet.has(lote)) {
+      registrarErro(
+        'LOTE NAO LOCALIZADO NA RELACAO', 
+        `O lote/REV/PAR "${lote}" presente no ICS não foi encontrado na Relação de Lotes.`, 
+        palletFinal, 
+        lote, 
+        awb, 
+        produto
+      );
+      return;
+    }
 
     if (lotesDuplicadosNaRelacao.has(lote)) {
       registrarErro('LOTE DUPLICADO', `O lote/REV/PAR "${lote}" presente no ICS foi bloqueado por estar duplicado na Relação.`, palletFinal, lote, awb, produto);
