@@ -1433,10 +1433,16 @@ function importarEstoquePosSubida(input) {
 }
 
 function executarAlocacao(){
-  if(!STORE.armazem.length){ toast('Importe o Armazém antes de alocar','warning'); abrirModalInicio(); return; }
+  if(!STORE.armazem || STORE.armazem.length === 0){ 
+    toast('Importe o Armazém antes de alocar','warning'); 
+    abrirModalInicio(); 
+    return; 
+  }
+  
   const rua = document.getElementById('alocRua').value;
   let ladoSel = document.getElementById('alocLado').value;
   if(rua === '02' && ladoSel === 'PAR') ladoSel = '';
+  
   let posicoes = STORE.armazem.filter(a => a.rua === rua);
   if(ladoSel) posicoes = posicoes.filter(a => a.lado === ladoSel);
   
@@ -1445,15 +1451,22 @@ function executarAlocacao(){
   
   STORE.ics.forEach(r => {
     if(lotesComErro.has(normLote(r.lote))) return;
-    if(!porPallet[r.pallet]) porPallet[r.pallet] = [];
-    porPallet[r.pallet].push(r);
+    let chavePallet = (r.pallet && r.pallet !== 'N/A' && r.pallet !== '—') ? norm(r.pallet) : `AWB_${r.awb}_${r.lote}`;
+    if(!porPallet[chavePallet]) porPallet[chavePallet] = [];
+    porPallet[chavePallet].push(r);
   });
+  
+  const chavesPallets = Object.keys(porPallet);
+  if(chavesPallets.length === 0) {
+    toast('Nenhum registro válido no ICS para alocar.', 'warning');
+    return;
+  }
   
   const usadas = new Set();
   STORE.alocacao = [];
   let palletsRestantes = [];
   
-  Object.keys(porPallet).forEach(pallet => {
+  chavesPallets.forEach(pallet => {
     const registros = porPallet[pallet];
     if(registros.length === 0) return;
     const cat = registros[0].categoria;
@@ -1482,13 +1495,27 @@ function executarAlocacao(){
           STORE.alocacao.push({produto: r.produto, awb: r.awb, lote: r.lote, pallet: r.pallet, categoria: item.cat, endereco: enderecoAlocado});
         });
       });
-      renderAlocacao(); gerarEntrada(); gerarPalletEndereco(); gerarValidacaoFinal();
-      toast('Alocação concluída!', 'success');
+      finalizarExecucaoAlocacao();
     });
   } else {
-    renderAlocacao(); gerarEntrada(); gerarPalletEndereco(); gerarValidacaoFinal();
-    toast('Alocação executada com sucesso!', 'success');
+    if(palletsRestantes.length > 0) {
+      palletsRestantes.forEach(item => {
+        item.registros.forEach(r => {
+          STORE.alocacao.push({produto: r.produto, awb: r.awb, lote: r.lote, pallet: r.pallet, categoria: item.cat, endereco: 'SEM POSIÇÃO DISPONÍVEL'});
+        });
+      });
+    }
+    finalizarExecucaoAlocacao();
   }
+}
+
+function finalizarExecucaoAlocacao() {
+  renderAlocacao(); 
+  gerarEntrada(); 
+  gerarPalletEndereco(); 
+  gerarValidacaoFinal();
+  tocarSomNotificacao();
+  toast('Alocação executada com sucesso!', 'success');
 }
 
 function renderAlocacao(){
