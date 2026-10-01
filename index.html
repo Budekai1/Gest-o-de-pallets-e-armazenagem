@@ -1062,11 +1062,19 @@ function renderErros(){
   const busca = buscaEl ? norm(buscaEl.value) : '';
   const selCat = document.getElementById('filtroCatErros');
   const catAtual = selCat ? selCat.value : '';
-  const categoriasPadrao = ['LOTE DUPLICADO', 'LOTE NAO LOCALIZADO NO ICS', 'DEVOLVER, CADASTRAR NO SENIOR', 'FORMATAÇÃO'];
+  
+  // Lista fixa com todas as categorias do sistema para garantir que apareçam sempre
+  const categoriasPadrao = [
+    'LOTE DUPLICADO', 
+    'LOTE NAO LOCALIZADO NO ICS', 
+    'DEVOLVER, CADASTRAR NO SENIOR', 
+    'FORMATAÇÃO'
+  ];
   
   if(selCat){
-    selCat.innerHTML = '<option value="">Todas as categorias</option>' + categoriasPadrao.map(c => `<option>${c}</option>`).join('');
-    selCat.value = categoriasPadrao.includes(catAtual) ? catAtual : '';
+    // Mantém a seleção atual se o usuário já tiver escolhido uma categoria
+    selCat.innerHTML = '<option value="">Todas as categorias</option>' + 
+      categoriasPadrao.map(c => `<option value="${c}" ${c === catAtual ? 'selected' : ''}>${c}</option>`).join('');
   }
   
   let filtrados = catAtual ? STORE.erros.filter(e => e.categoria === catAtual) : STORE.erros;
