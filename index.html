@@ -1774,6 +1774,7 @@ function gerarPalletEndereco(){
   const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
   const mapa = new Map();
   
+  // Mapeia estritamente o que foi alocado com sucesso na alocação automática
   STORE.alocacao.forEach(item => {
     if(lotesComErro.has(normLote(item.lote))) return;
     let pal = item.pallet || item.pallete;
@@ -1782,8 +1783,8 @@ function gerarPalletEndereco(){
       mapa.set(pal, end);
     }
   });
-
   mapa.forEach((endereco, pallet) => STORE.palletEndereco.push({ pallet, endereco }));
+  renderPalletEndereco();
 }
 
 function renderPalletEndereco(){
