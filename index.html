@@ -1432,73 +1432,42 @@ function importarEstoquePosSubida(input) {
 }
 
 function atualizarProcessosSubsequentes() {
-  gerarEntrada();
-  gerarSaida();
-  gerarConcatenar();
-  gerarPalletEndereco();
-  gerarValidacaoFinal();
-}
-
-function executarAlocacao(){
-  if(!STORE.armazem.length){ toast('Importe o Armazém antes de alocar','warning'); abrirModalInicio(); return; }
-  const rua = document.getElementById('alocRua').value;
-  let ladoSel = document.getElementById('alocLado').value;
-  if(rua === '02' && ladoSel === 'PAR') ladoSel = '';
-  let posicoes = STORE.armazem.filter(a => a.rua === rua);
-  if(ladoSel) posicoes = posicoes.filter(a => a.lado === ladoSel);
-  
-  const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
-  const porPallet = {};
-  
-  STORE.ics.forEach(r => {
-    if(lotesComErro.has(normLote(r.lote))) return;
-    if(!porPallet[r.pallet]) porPallet[r.pallet] = [];
-    porPallet[r.pallet].push(r);
-  });
-  
-  const usadas = new Set();
-  STORE.alocacao = [];
-  let palletsRestantes = [];
-  
-  Object.keys(porPallet).forEach(pallet => {
-    const registros = porPallet[pallet];
-    if(registros.length === 0) return;
-    const cat = registros[0].categoria;
-    let pos = posicoes.find(p => !usadas.has(p.endereco) && p.categoria === cat);
-    if(!pos) pos = posicoes.find(p => !usadas.has(p.endereco));
-    if(pos) {
-      usadas.add(pos.endereco);
-      registros.forEach(r => {
-        STORE.alocacao.push({produto: r.produto, awb: r.awb, lote: r.lote, pallet: r.pallet, categoria: cat, endereco: pos.endereco});
-      });
-    } else {
-      palletsRestantes.push({pallet, registros, cat});
-    }
-  });
-  
-  if(palletsRestantes.length > 0 && ladoSel) {
-    const ladoOposto = ladoSel === 'IMPAR' ? 'PAR' : 'IMPAR';
-    abrirModal('Endereços esgotados', `Deseja alocar o restante no lado ${ladoOposto} da rua ${rua}?`, '⚠️', () => {
-      let posicoesOpostas = STORE.armazem.filter(a => a.rua === rua && a.lado === ladoOposto);
-      palletsRestantes.forEach(item => {
-        let pos = posicoesOpostas.find(p => !usadas.has(p.endereco) && p.categoria === item.cat);
-        if(!pos) pos = posicoesOpostas.find(p => !usadas.has(p.endereco));
-        const enderecoAlocado = pos ? pos.endereco : 'SEM POSIÇÃO DISPONÍVEL';
-        if(pos) usadas.add(pos.endereco);
-        item.registros.forEach(r => {
-          STORE.alocacao.push({produto: r.produto, awb: r.awb, lote: r.lote, pallet: r.pallet, categoria: item.cat, endereco: enderecoAlocado});
-        });
-      });
-      renderAlocacao(); gerarEntrada(); gerarPalletEndereco(); gerarValidacaoFinal();
-      tocarSomNotificacao();
-      toast('Alocação concluída!', 'success');
-    });
+  if (STORE.armazem && STORE.armazem.length > 0 && STORE.ics && STORE.ics.length > 0) {
+    executarAlocacaoSilenciosa();
   } else {
-    renderAlocacao(); gerarEntrada(); gerarPalletEndereco(); gerarValidacaoFinal();
-    tocarSomNotificacao();
-    toast('Alocação executada com sucesso!', 'success');
+    gerarEntrada();
+    gerarSaida();
+    gerarConcatenar();
+    gerarPalletEndereco();
+    gerarValidacaoFinal();
   }
+
+function renderAlocacao(){
+  const selPallet = document.getElementById('filtroPalletAloc');
+  if(!selPallet) return;
+  const atual = selPallet.value;
+  const pallets = [...new Set(STORE.alocacao.map(r => r.pallet).filter(Boolean))].sort();
+  selPallet.innerHTML = '<option value="">Todos</option>' + pallets.map(p => `<option value="${p}">${p}</option>`).join('');
+  selPallet.value = pallets.includes(atual) ? atual : '';
+  const palletSel = selPallet.value;
+  const tbody = document.getElementById('tbodyAlocacao');
+  let filtrados = STORE.alocacao.filter(r => !palletSel || norm(r.pallet) === norm(palletSel));
+  filtrados.sort((a, b) => norm(a.pallet).localeCompare(norm(b.pallet)));
+  const cnt = document.getElementById('cntAlocacao');
+  if(cnt) cnt.textContent = filtrados.length + ' registros';
+  if(!tbody) return;
+  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="5">Nenhuma alocação executada.</td></tr>'; return; }
+  tbody.innerHTML = filtrados.map(r => `
+    <tr>
+      <td>${r.produto}</td>
+      <td>${r.awb}</td>
+      <td><strong>${r.lote}</strong></td>
+      <td><strong style="color: var(--primary);">${r.pallet}</strong></td>
+      <td><span class="${r.endereco === 'SEM POSIÇÃO DISPONÍVEL' ? 'badge red' : ''}">${r.endereco}</span></td>
+    </tr>
+  `).join('');
 }
+  
 function renderAlocacao(){
   const selPallet = document.getElementById('filtroPalletAloc');
   const selRua = document.getElementById('alocRua');
