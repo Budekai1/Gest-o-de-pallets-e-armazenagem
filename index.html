@@ -1509,15 +1509,6 @@ function executarAlocacao(){
   }
 }
 
-function finalizarExecucaoAlocacao() {
-  renderAlocacao(); 
-  gerarEntrada(); 
-  gerarPalletEndereco(); 
-  gerarValidacaoFinal();
-  tocarSomNotificacao();
-  toast('Alocação executada com sucesso!', 'success');
-}
-
 function renderAlocacao(){
   const selPallet = document.getElementById('filtroPalletAloc');
   const selRua = document.getElementById('alocRua');
