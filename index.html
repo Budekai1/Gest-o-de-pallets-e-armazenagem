@@ -1495,7 +1495,12 @@ function executarAlocacao(){
           STORE.alocacao.push({produto: r.produto, awb: r.awb, lote: r.lote, pallet: r.pallet, categoria: item.cat, endereco: enderecoAlocado});
         });
       });
-      finalizarExecucaoAlocacao();
+      renderAlocacao(); 
+      gerarEntrada(); 
+      gerarPalletEndereco(); 
+      gerarValidacaoFinal();
+      tocarSomNotificacao();
+      toast('Alocação executada com sucesso!', 'success');
     });
   } else {
     if(palletsRestantes.length > 0) {
@@ -1505,7 +1510,12 @@ function executarAlocacao(){
         });
       });
     }
-    finalizarExecucaoAlocacao();
+    renderAlocacao(); 
+    gerarEntrada(); 
+    gerarPalletEndereco(); 
+    gerarValidacaoFinal();
+    tocarSomNotificacao();
+    toast('Alocação executada com sucesso!', 'success');
   }
 }
 
