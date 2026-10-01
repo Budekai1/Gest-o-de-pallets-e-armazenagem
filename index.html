@@ -1774,7 +1774,7 @@ function gerarPalletEndereco(){
   const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
   const mapa = new Map();
   
-  // Mapeia estritamente o que foi alocado com sucesso na alocação automática
+  // 1. Prioriza o que foi gerado na Alocação Automática
   STORE.alocacao.forEach(item => {
     if(lotesComErro.has(normLote(item.lote))) return;
     let pal = item.pallet || item.pallete;
@@ -1783,6 +1783,19 @@ function gerarPalletEndereco(){
       mapa.set(pal, end);
     }
   });
+
+  // 2. Se a alocação estiver vazia, puxa direto do ICS cruzado com a Relação
+  if(mapa.size === 0 && STORE.ics.length > 0) {
+    STORE.ics.forEach(item => {
+      let pal = item.pallet || item.pallete;
+      let relMatch = STORE.relacao.find(r => normLote(r.lote) === normLote(item.lote));
+      let end = relMatch ? (relMatch.endereco || relMatch.local || 'Aguardando Alocação') : 'Aguardando Alocação';
+      if(pal && pal !== 'N/A' && pal !== '—' && !mapa.has(pal)) {
+        mapa.set(pal, end);
+      }
+    });
+  }
+
   mapa.forEach((endereco, pallet) => STORE.palletEndereco.push({ pallet, endereco }));
   renderPalletEndereco();
 }
