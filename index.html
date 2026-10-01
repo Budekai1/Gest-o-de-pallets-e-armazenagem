@@ -132,6 +132,7 @@ main { flex: 1; overflow: hidden; padding: 20px; display: flex; background: tran
 .toolbar select, .toolbar input[type="search"] { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 12px; font-size: 0.85rem; color: var(--text); outline: none; transition: border-color 0.2s; }
 .toolbar select:focus, .toolbar input[type="search"]:focus { border-color: var(--primary); }
 .toolbar input[type="search"] { width: 240px; }
+.spacer { flex: 1; }
 
 .btn { 
   background: var(--primary); 
@@ -178,8 +179,8 @@ tr:hover td { background: #1a2538; }
   position: fixed !important;
   top: 0 !important;
   right: 0 !important;
-  width: 960px !important;
-  max-width: 96vw !important;
+  width: 1000px !important;
+  max-width: 80vw !important;
   height: 100vh !important;
   background: var(--surface) !important;
   z-index: 100 !important;
@@ -322,7 +323,6 @@ tr:hover td { background: #1a2538; }
   <button data-tab="ics" onclick="mudarAba('ics')">🚚 ICS INTEGRATED</button>
   <button data-tab="alocacao" onclick="mudarAba('alocacao')">📍 Alocação Automática</button>
   <button data-tab="pallet-endereco" onclick="mudarAba('pallet-endereco')">🔗 Pallet + Endereço</button>
-  <button data-tab="entrada" onclick="mudarAba('entrada')">📥 Entrada</button>
   <button data-tab="saida" onclick="mudarAba('saida')">📤 Saída</button>
   <button data-tab="concatenar" onclick="mudarAba('concatenar')">🔗 Concatenar</button>
   <button data-tab="validacao-final" onclick="mudarAba('validacao-final')">🔍 Validação Final</button>
@@ -361,7 +361,7 @@ tr:hover td { background: #1a2538; }
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>PRODUTO/NOME FANTASIA</th><th>AWB</th><th>LOTE / MASTER</th><th>PALET</th><th>ALTURA</th></tr></thead>
+          <thead><tr><th>PRODUTO/NOME FANTASIA</th><th>AWB</th><th>LOTE / MASTER</th><th>PALLET</th><th>ALTURA</th></tr></thead>
           <tbody id="tbodyIcs"></tbody>
         </table>
       </div>
@@ -380,7 +380,7 @@ tr:hover td { background: #1a2538; }
         <select id="alocLado" onchange="renderAlocacao()"><option value="">Todos</option><option value="PAR">PAR</option><option value="IMPAR">ÍMPAR</option></select>
         <label>Pallet:</label>
         <select id="filtroPalletAloc" onchange="renderAlocacao()"><option value="">Todos</option></select>
-        <button class="btn" onclick="executarAlocacao()">⚡ Executar Alocação</button>
+        <button class="btn" id="btnExecutarAlocacao" onclick="executarAlocacao()">⚡ Executar Alocação</button>
       </div>
       <div class="table-wrap">
         <table>
@@ -390,23 +390,7 @@ tr:hover td { background: #1a2538; }
       </div>
     </div>
   </section>
-  <section class="tab" id="tab-entrada">
-    <div class="card">
-      <h2>📥 Entrada <span class="cnt" id="cntEntrada">0 registros</span></h2>
-      <div class="toolbar">
-        <button class="btn green" onclick="gerarEntrada()">🔄 Atualizar Entrada</button>
-        <button class="btn amber" onclick="baixarEntradaExcel()">📥 Baixar Entrada (Excel)</button>
-        <div class="spacer"></div>
-        <input type="search" id="buscaEntrada" placeholder="🔍 Buscar Endereço ou AWB..." oninput="renderEntrada()">
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Código</th><th>Endereço</th><th>Estoque</th><th>Data Vencimento</th><th>Awb</th></tr></thead>
-          <tbody id="tbodyEntrada"></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
+  
   <section class="tab" id="tab-saida">
     <div class="card">
       <h2>📤 Saída <span class="cnt" id="cntSaida">0 registros</span></h2>
@@ -431,6 +415,7 @@ tr:hover td { background: #1a2538; }
         <button class="btn green" onclick="gerarConcatenar()">🔄 Atualizar Concatenar</button>
         <button class="btn amber" onclick="baixarConcatenarTxt()">📥 Baixar INV_v2JDU</button>
         <button class="btn ghost" onclick="baixarLocaisTxt()">📥 Baixar LOCAIS</button>
+        <button class="btn amber" onclick="baixarAmbosSaida()">📥 Baixar Saída</button>
         <div class="spacer"></div>
         <input type="search" id="buscaConcatenar" placeholder="🔍 Buscar na concatenação..." oninput="renderConcatenar()">
       </div>
@@ -526,7 +511,7 @@ tr:hover td { background: #1a2538; }
 <div class="modal-overlay" id="modalInicio">
   <div class="modal" style="max-width:540px">
     <h3>📥 Importação Inicial</h3>
-    <p>Para começar, importe os arquivos base de <strong>Armazém</strong> e <strong>Estoque Local por Lote</strong> <a href="https://texcoprd.seniorcloud.com.br/siltwms/" style="color: green;">Senior WMS</a> <br></p>
+    <p>Para começar, importe os arquivos base de <strong>Armazém</strong> e <strong>Estoque Local por Lote</strong> <a href="https://texcoprd.seniorcloud.com.br/siltwms/" target="_blank" rel="noopener noreferrer" style="color: green;">Senior WMS</a> <br></p>
     <br>
     <strong>Filtro do armazém:</strong><br>
     <strong>Estoque:</strong> Não <br>
@@ -590,10 +575,11 @@ tr:hover td { background: #1a2538; }
             <th style="width: 18%;">LOTE</th>
             <th style="width: 26%;">AWB</th>
             <th style="width: 28%;">PALLET</th>
+            <th style="width: 25%;">ERROS</th>
           </tr>
         </thead>
         <tbody id="tbodyErros">
-          <tr><td colspan="4" class="empty-msg">Nenhum erro registrado.</td></tr>
+          <tr><td colspan="5" class="empty-msg">Nenhum erro registrado.</td></tr>
         </tbody>
       </table>
     </div>
@@ -603,7 +589,7 @@ tr:hover td { background: #1a2538; }
 <script>
 // --- SCRIPT WMS INTEGRADO ---
 document.addEventListener('click', function unlockAudio() {
-try { const audioTest = new Audio(); audioTest.play().catch(() => {}); } catch (e) {}
+  try { const audioTest = new Audio(); audioTest.play().catch(() => {}); } catch (e) {}
 }, { once: true });
 
 const LS_KEY = 'wms_codigos_clientes';
@@ -616,31 +602,27 @@ function norm(t){
   if(t === null || t === undefined) return '';
   return String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
 }
+
 function normCab(t){
   return norm(t).replace(/Ã/g,'A').replace(/Â/g,'A').replace(/º/g,'O').replace(/ª/g,'A').replace(/Þ/g,'P');
 }
+
 function normLado(t){
   let s = norm(t); s = s.replace(/Ã/g,'A');
   if(s.includes('IMPAR')) return 'IMPAR';
   if(s.includes('PAR')) return 'PAR';
   return s;
 }
+
 function normLote(t) {
   if (t === null || t === undefined) return '';
   let limpo = String(t).trim().toUpperCase();
-  
-  limpo = limpo.replace(/[^A-Z0-9]/g, '');
-  
-  if (limpo.startsWith('PAR') && limpo.length > 3) {
-    limpo = limpo.substring(3);
-  } else if (limpo.startsWith('REV') && limpo.length > 3) {
-    limpo = limpo.substring(3);
-  } else if (limpo.startsWith('A') && limpo.length > 1) {
+  if (limpo.startsWith('A') && limpo.length > 1) {
     limpo = limpo.substring(1);
   }
-  
   return limpo;
 }
+
 function categoriaAltura(h){
   let n = parseInt(h,10);
   if(isNaN(n)) return '—';
@@ -649,6 +631,7 @@ function categoriaAltura(h){
   if(n >= 7) return 'ALTO';
   return '—';
 }
+
 function categoriaAlturaTexto(t){
   let s = norm(t);
   if(s.includes('BAIX')) return 'BAIXO';
@@ -656,12 +639,14 @@ function categoriaAlturaTexto(t){
   if(s.includes('ALT')) return 'ALTO';
   return '—';
 }
+
 function parseAltura(v){
   if(v === null || v === undefined) return {num:null, cat:'—'};
   let s = String(v).trim();
   if(/^\d+$/.test(s)){ let n = parseInt(s,10); return {num:n, cat:categoriaAltura(n)}; }
   return {num:null, cat:categoriaAlturaTexto(s)};
 }
+
 function toast(msg, tipo='info'){
   const icons = {success:'✅', error:'❌', info:'ℹ️', warning:'⚠️'};
   const c = document.getElementById('toast-container');
@@ -672,29 +657,16 @@ function toast(msg, tipo='info'){
   c.appendChild(el);
   setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300);},3500);
 }
+
 function lerArquivo(file, cb) {
   const reader = new FileReader();
-  
-  const limparJsonVazios = (json) => {
-    return json.map(linha => {
-      const novaLinha = {};
-      Object.keys(linha).forEach(k => {
-        if (k && !k.startsWith('__EMPTY')) {
-          novaLinha[k] = linha[k];
-        }
-      });
-      return novaLinha;
-    });
-  };
-
   if (file.name.toLowerCase().endsWith('.csv')) {
     reader.onload = e => {
       try {
         const text = e.target.result;
         const wb = XLSX.read(text, { type: 'string', raw: true });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const jsonBruto = XLSX.utils.sheet_to_json(ws, { defval: '' });
-        const json = limparJsonVazios(jsonBruto);
+        const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
         cb(json);
       } catch (err) {
         toast('Erro ao ler arquivo CSV: ' + err.message, 'error');
@@ -707,8 +679,7 @@ function lerArquivo(file, cb) {
         const data = new Uint8Array(e.target.result);
         const wb = XLSX.read(data, { type: 'array' });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const jsonBruto = XLSX.utils.sheet_to_json(ws, { defval: '' });
-        const json = limparJsonVazios(jsonBruto);
+        const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
         cb(json);
       } catch (err) {
         toast('Erro ao ler arquivo Excel: ' + err.message, 'error');
@@ -717,22 +688,26 @@ function lerArquivo(file, cb) {
     reader.readAsArrayBuffer(file);
   }
 }
+
 function acharColuna(linha, alias){
   const keys = Object.keys(linha);
   for(const a of alias){ for(const k of keys){ if(norm(k) === norm(a)) return k; } }
   for(const a of alias){ for(const k of keys){ if(norm(k).includes(norm(a)) || norm(a).includes(norm(k))) return k; } }
   return null;
 }
+
 function acharColunaFlex(linha, alias, padroes){
   const keys = Object.keys(linha);
   for(const a of alias){ for(const k of keys){ if(normCab(k) === normCab(a)) return k; } }
   for(const p of padroes){ for(const k of keys){ if(normCab(k).includes(p)) return k; } }
   return null;
 }
+
 function val(linha, alias){
   const k = acharColuna(linha, alias);
   return k ? linha[k] : '';
 }
+
 function baixarExcel(abas, filename){
   const wb = XLSX.utils.book_new();
   abas.forEach(a => {
@@ -750,6 +725,7 @@ function abrirModal(title, msg, icon, cb){
   modalCallback = cb;
   document.getElementById('modalConfirm').classList.add('show');
 }
+
 function fecharModal(){ document.getElementById('modalConfirm').classList.remove('show'); modalCallback = null; }
 const btnModalOk = document.getElementById('modalOk');
 if(btnModalOk) btnModalOk.onclick = () => { const cb = modalCallback; fecharModal(); if(cb) cb(); };
@@ -761,6 +737,15 @@ function fecharModalInicio(){
     toast('Atenção: Sem o Armazém ou Estoque Local completos, algumas rotinas podem ficar limitadas.', 'warning');
   }
 }
+
+function atualizarContadorErros() {
+  const badge = document.querySelector('#badgeErros'); 
+  if (badge) {
+    const quantidade = STORE.erros ? STORE.erros.length : 0;
+    badge.textContent = quantidade;
+  }
+}
+
 function mudarAba(nome){
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   const tabEl = document.getElementById('tab-'+nome);
@@ -772,12 +757,14 @@ function mudarAba(nome){
   if(nome === 'pallet-endereco') gerarPalletEndereco();
   if(nome === 'validacao-final') gerarValidacaoFinal();
 }
+
 function abrirPainel(nome){
   document.getElementById('panel-'+nome).classList.add('show');
   document.getElementById('overlay-'+nome).classList.add('show');
   if(nome === 'codigos') renderCodigos();
   if(nome === 'erros') renderErros();
 }
+
 function baixarCodigosExcel() {
   if (!STORE.codigos || STORE.codigos.length === 0) {
     toast('Não há códigos cadastrados para exportar.', 'warning');
@@ -790,10 +777,12 @@ function baixarCodigosExcel() {
   baixarExcel([{ nome: "Codigos Clientes", data: dadosParaExportar }], "codigos_clientes.xlsx");
   toast('Arquivo de códigos baixado com sucesso!', 'success');
 }
+
 function fecharPainel(nome){
   document.getElementById('panel-'+nome).classList.remove('show');
   document.getElementById('overlay-'+nome).classList.remove('show');
 }
+
 function atualizarOpcoesLadoPorRua() {
   const selRua = document.getElementById('alocRua');
   const selLado = document.getElementById('alocLado');
@@ -805,13 +794,19 @@ function atualizarOpcoesLadoPorRua() {
     selLado.innerHTML = '<option value="">Todos</option><option value="PAR">PAR</option><option value="IMPAR">ÍMPAR</option>';
   }
 }
+
 function atualizarProcessosSubsequentes() {
-  gerarEntrada();
-  gerarSaida();
-  gerarConcatenar();
-  gerarPalletEndereco();
-  gerarValidacaoFinal();
+  if (STORE.armazem && STORE.armazem.length > 0 && STORE.ics && STORE.ics.length > 0) {
+    executarAlocacaoSilenciosa();
+  } else {
+    gerarEntrada();
+    gerarSaida();
+    gerarConcatenar();
+    gerarPalletEndereco();
+    gerarValidacaoFinal();
+  }
 }
+
 function carregarCodigos(){
   try{
     STORE.codigos = JSON.parse(localStorage.getItem(LS_KEY)) || [];
@@ -820,14 +815,17 @@ function carregarCodigos(){
   }
   atualizarBadgeCodigos();
 }
+
 function salvarCodigos(){
   localStorage.setItem(LS_KEY, JSON.stringify(STORE.codigos));
   atualizarBadgeCodigos();
 }
+
 function atualizarBadgeCodigos(){
   const badge = document.getElementById('badgeCodigos');
   if(badge) badge.textContent = STORE.codigos.length;
 }
+
 function adicionarCodigo(){
   const c = norm(document.getElementById('novoCodigo').value);
   const n = String(document.getElementById('novoNome').value).trim();
@@ -840,20 +838,23 @@ function adicionarCodigo(){
   document.getElementById('novoNome').value = '';
   toast('Código adicionado e processo atualizado!','success');
 }
+
 function removerCodigo(i){
   STORE.codigos.splice(i, 1); 
   salvarCodigos(); 
   renderCodigos(); 
   toast('Código removido','info');
 }
+
 function confirmarLimparCodigos(){
-  abrirModal('Excluir Todos','Tem certeza que deseja excluir TODOS os códigos de clientes?','🗑️',()=>{
-    STORE.codigos = []; 
-    salvarCodigos(); 
-    renderCodigos(); 
-    toast('Todos os códigos foram excluídos','success');
+  abrirModal('Excluir Códigos', 'Tem certeza que deseja apagar todos os códigos de clientes cadastrados?', '🗑️', () => {
+    STORE.codigos = [];
+    salvarCodigos();
+    renderCodigos();
+    toast('Todos os códigos foram excluídos.', 'info');
   });
 }
+
 function importarCodigos(input){
   if(!input.files.length) return;
   lerArquivo(input.files[0], json => {
@@ -874,6 +875,7 @@ function importarCodigos(input){
     input.value = '';
   });
 }
+
 function reprocessarAposAtualizarCodigos() {
   if (STORE.erros && STORE.erros.length > 0) {
     STORE.erros = STORE.erros.filter(e => {
@@ -884,22 +886,27 @@ function reprocessarAposAtualizarCodigos() {
       return true;
     });
   }
+  
   if (STORE.ics && STORE.ics.length > 0) {
     const icOriginal = [...STORE.ics];
     processarIcsIndependenteSilencioso(icOriginal);
   }
+  
+  if (STORE.alocacao && STORE.alocacao.length > 0) {
+    executarAlocacaoSilenciosa();
+  }
+
+  salvarErros();
   renderErros();
   renderIcs();
   renderRelacao();
-}function processarIcsIndependente(jsonIcs) {
+  atualizarProcessosSubsequentes();
+}
+
+function processarIcsIndependente(jsonIcs) {
   STORE.ics = [];
-  
   const lotesDuplicadosNaRelacao = new Set(
     STORE.erros.filter(e => e.categoria === 'LOTE DUPLICADO').map(e => normLote(e.lote))
-  );
-
-  const lotesRelacaoSet = new Set(
-    STORE.relacao ? STORE.relacao.map(r => normLote(r.lote)) : []
   );
   
   const chavesIcsSet = new Set();
@@ -907,80 +914,35 @@ function reprocessarAposAtualizarCodigos() {
   jsonIcs.forEach(linha => {
     const produto = norm(val(linha, ['PRODUTO/NOME FANTASIA', 'NOME FANTASIA DO CLIENTE', 'NOME FANTASIA', 'CLIENTE', 'PRODUTO']));
     const awb = norm(val(linha, ['AWB', 'AWB/LOTE/MASTER']));
-    
-    const loteBruto = val(linha, ['REV', 'Lote/ID AWB Master', 'LOTE/ MASTER', 'LOTE / MASTER', 'LOTE/MASTER', 'LOTE', 'MASTER', 'A', 'LOTE INDÚSTRIA', 'LOTE INDUSTRIA', 'RECUSAS', 'PAR']);
-    const lote = normLote(loteBruto);
+    const lote = normLote(val(linha, ['Lote/ID AWB Master', 'LOTE/ MASTER', 'LOTE / MASTER', 'LOTE/MASTER', 'LOTE', 'MASTER', 'LOTE INDÚSTRIA', 'LOTE INDUSTRIA']));
+    let palletIcs = norm(val(linha, ['PALET', 'PALLET', 'PALLETE', 'PALETE', 'Nº PALLET']));
     
     if(!lote && !awb) return;
 
-    // --- CORREÇÃO DA BUSCA DO PALLET ---
-    // 1. Tenta buscar nas colunas comuns de pallet/par/lacre do ICS
-    let palletIcs = norm(val(linha, ['PALET', 'PALLET', 'PALLETE', 'PALETE', 'Nº PALLET', 'PAR', 'LACRES', 'PALLET ', 'ENDEREÇO', 'ENDERECO']));
-    let palletFinal = palletIcs;
-
-    // 2. Se não encontrou no ICS, busca diretamente na Relação cruzando pelo lote ou lote bruto
-    if (!palletFinal || palletFinal === '' || palletFinal === 'N/A' || palletFinal === '—') {
-      const relMatch = STORE.relacao.find(r => 
-        normLote(r.lote) === lote || 
-        normLote(r.lote) === normLote(loteBruto) ||
-        String(r.lote).trim() === String(loteBruto).trim()
-      );
-      
-      if (relMatch) {
-        palletFinal = norm(relMatch.pallet || relMatch.pallete || relMatch.par || relMatch.lacres || relMatch.endereco);
-      }
-    }
-    
-    // Se continuar vazio, define como 'N/A' para evitar que fique em branco
-    if (!palletFinal || palletFinal === '') palletFinal = 'N/A';
-    // -----------------------------------
-
-    if (lotesRelacaoSet.size > 0 && !lotesRelacaoSet.has(lote)) {
-      registrarErro(
-        'LOTE NAO LOCALIZADO NA RELACAO', 
-        `O lote/REV/PAR "${lote}" presente no ICS não foi encontrado na Relação de Lotes.`, 
-        palletFinal, 
-        lote, 
-        awb, 
-        produto
-      );
-      return;
+    if (!palletIcs && STORE.relacao && STORE.relacao.length > 0) {
+      const relMatch = STORE.relacao.find(r => normLote(r.lote) === lote);
+      if (relMatch) palletIcs = norm(relMatch.pallete || relMatch.pallet);
     }
 
     if (lotesDuplicadosNaRelacao.has(lote)) {
-      registrarErro('LOTE DUPLICADO', `O lote/REV/PAR "${lote}" presente no ICS foi bloqueado por estar duplicado na Relação.`, palletFinal, lote, awb, produto);
+      registrarErro('LOTE DUPLICADO', `O lote "${lote}" presente no ICS foi bloqueado por estar duplicado na Relação.`, palletIcs || 'N/A', lote, awb, produto);
       return;
     }
 
     const chaveUnica = `${lote}_${awb}`;
     if (chavesIcsSet.has(chaveUnica)) {
-      registrarErro('LOTE DUPLICADO', `O lote/REV/PAR "${lote}" com o AWB "${awb}" possui ocorrências duplicadas no arquivo ICS.`, palletFinal, lote, awb, produto);
+      registrarErro('LOTE DUPLICADO', `O lote "${lote}" com o AWB "${awb}" possui ocorrências duplicadas no arquivo ICS.`, palletIcs || 'N/A', lote, awb, produto);
       return;
     }
     chavesIcsSet.add(chaveUnica);
 
     const codObj = STORE.codigos.find(c => norm(c.nome) === produto);
     if (!codObj || !codObj.codigo) {
-      registrarErro(
-        'DEVOLVER, CADASTRAR NO SENIOR', 
-        `O produto/nome fantasia "${produto || 'VAZIO'}" não foi encontrado na base de Códigos Clientes.`, 
-        palletFinal, 
-        lote, 
-        awb, 
-        produto
-      );
+      registrarErro('DEVOLVER, CADASTRAR NO SENIOR', `O produto/nome fantasia "${produto || 'VAZIO'}" não foi encontrado na base de Códigos Clientes.`, palletIcs || 'N/A', lote, awb, produto);
       return; 
     }
 
-    // Salva o objeto com o pallet garantido
-    STORE.ics.push({
-      produto, 
-      awb, 
-      lote: String(loteBruto).trim().toUpperCase(), 
-      pallet: palletFinal, 
-      altura: '—', 
-      categoria: '—'
-    });
+    STORE.ics.push({produto, awb, lote, pallet: palletIcs || 'N/A', altura: '—', categoria: '—'});
   });
   
   if (STORE.relacao && STORE.relacao.length > 0) {
@@ -991,6 +953,82 @@ function reprocessarAposAtualizarCodigos() {
   renderRelacao(); 
   renderErros();
   toast('ICS importada e validada com sucesso!', 'success');
+}
+
+function processarIcsIndependenteSilencioso(jsonIcs) {
+  STORE.ics = [];
+  const lotesDuplicadosSet = new Set(STORE.erros.filter(e => e.categoria === 'LOTE DUPLICADO' || e.categoria === 'PALLET DUPLICADO').map(e => normLote(e.lote)));
+  
+  jsonIcs.forEach(linha => {
+    const produto = norm(val(linha, ['PRODUTO/NOME FANTASIA', 'NOME FANTASIA DO CLIENTE', 'NOME FANTASIA', 'CLIENTE', 'PRODUTO']));
+    const awb = norm(val(linha, ['AWB', 'AWB/LOTE/MASTER']));
+    const lote = normLote(val(linha, ['Lote/ID AWB Master', 'LOTE/ MASTER', 'LOTE / MASTER', 'LOTE/MASTER', 'LOTE', 'MASTER', 'LOTE INDÚSTRIA', 'LOTE INDUSTRIA']));
+    let palletIcs = norm(val(linha, ['PALET', 'PALLET', 'PALLETE', 'PALETE', 'Nº PALLET']));
+    
+    if(!lote && !awb) return;
+    if(lotesDuplicadosSet.has(lote)) return;
+
+    if (!palletIcs && STORE.relacao && STORE.relacao.length > 0) {
+      const relMatch = STORE.relacao.find(r => normLote(r.lote) === lote);
+      if (relMatch) palletIcs = norm(relMatch.pallete || relMatch.pallet);
+    }
+
+    STORE.ics.push({produto, awb, lote, pallet: palletIcs, altura: '—', categoria: '—'});
+  });
+  
+  if (STORE.relacao && STORE.relacao.length > 0) {
+    compararRelacaoComICS();
+  }
+}
+
+function executarAlocacaoSilenciosa() {
+  const rua = document.getElementById('alocRua') ? document.getElementById('alocRua').value : '01';
+  let posicoes = STORE.armazem.filter(a => a.rua === rua);
+  const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
+  const porPallet = {};
+  
+  STORE.ics.forEach(r => {
+    if (lotesComErro.has(normLote(r.lote))) return; 
+    let chavePallet = (r.pallet && r.pallet !== 'N/A' && r.pallet !== '—') ? norm(r.pallet) : `AWB_${r.awb}_${r.lote}`;
+    if (!porPallet[chavePallet]) porPallet[chavePallet] = [];
+    porPallet[chavePallet].push(r);
+  });
+  
+  const usadas = new Set();
+  STORE.alocacao = [];
+  
+  Object.keys(porPallet).forEach(pallet => {
+    const registros = porPallet[pallet];
+    if(registros.length === 0) return;
+    const cat = registros[0].categoria;
+    let pos = posicoes.find(p => !usadas.has(p.endereco) && p.categoria === cat);
+    if(!pos) pos = posicoes.find(p => !usadas.has(p.endereco));
+    
+    if(pos) {
+      usadas.add(pos.endereco);
+      registros.forEach(r => {
+        STORE.alocacao.push({
+          produto: r.produto, 
+          awb: r.awb, 
+          lote: r.lote, 
+          pallet: r.pallet, 
+          categoria: cat, 
+          endereco: pos.endereco
+        });
+      });
+    } else {
+      registros.forEach(r => {
+        STORE.alocacao.push({
+          produto: r.produto, 
+          awb: r.awb, 
+          lote: r.lote, 
+          pallet: r.pallet, 
+          categoria: cat, 
+          endereco: 'SEM POSIÇÃO DISPONÍVEL'
+        });
+      });
+    }
+  });
 }
 
 function renderCodigos(){
@@ -1004,8 +1042,10 @@ function renderCodigos(){
     return `<tr><td><strong>${c.codigo}</strong></td><td>${c.nome}</td><td><button class="btn red sm" onclick="removerCodigo(${i})">🗑️</button></td></tr>`;
   }).join('');
 }
+
 function carregarErros(){ STORE.erros = []; atualizarBadgeErros(); renderErros(); }
 function salvarErros(){ atualizarBadgeErros(); }
+
 function atualizarBadgeErros(){
   const badge = document.getElementById('badgeErros');
   const btnHeader = document.querySelector('button[onclick="abrirPainel(\'erros\')"]');
@@ -1015,24 +1055,19 @@ function atualizarBadgeErros(){
     else btnHeader.classList.remove('btn-piscando');
   }
 }
-function confirmarLimparErros(){
-  STORE.erros = []; salvarErros(); renderErros();
-  toast('Central de erros limpa com sucesso!', 'success');
-}
+
 function registrarErro(categoria, mensagem, pallet, lote='', awb='', produto=''){
   categoria = String(categoria || 'GERAL').trim();
   mensagem = String(mensagem || '').trim();
   pallet = String(pallet || '').trim();
   if(!mensagem) return;
-
   const chave = norm(categoria) + '|' + norm(lote) + '|' + norm(awb);
   if(STORE.erros.some(e => e.chave === chave)) return;
-  
   const data = new Date().toLocaleString('pt-BR');
   STORE.erros.push({ id: Date.now() + Math.random(), categoria, mensagem, pallet, lote, awb, produto, data, chave });
-  salvarErros(); 
-  renderErros();
+  salvarErros(); renderErros();
 }
+
 function renderErros(){
   const buscaEl = document.getElementById('buscaErros');
   const busca = buscaEl ? norm(buscaEl.value) : '';
@@ -1044,7 +1079,8 @@ function renderErros(){
     selCat.innerHTML = '<option value="">Todas as categorias</option>' + categoriasPadrao.map(c => `<option>${c}</option>`).join('');
     selCat.value = categoriasPadrao.includes(catAtual) ? catAtual : '';
   }
-  let filtrados = STORE.erros.filter(e => categoriasPadrao.includes(e.categoria));
+  
+  let filtrados = catAtual ? STORE.erros.filter(e => e.categoria === catAtual) : STORE.erros;
   
   if(busca) {
     filtrados = filtrados.filter(e => {
@@ -1052,14 +1088,15 @@ function renderErros(){
       let aTxt = e.awb || '';
       let pTxt = e.produto || '';
       let palTxt = e.pallet || '';
+      let eTxt = e.mensagem || '';
       return norm(pTxt).includes(busca) ||
         norm(lTxt).includes(busca) ||
         norm(aTxt).includes(busca) ||
         norm(palTxt).includes(busca) ||
+        norm(eTxt).includes(busca) ||
         norm(e.categoria).includes(busca);
     });
   }
-  if(catAtual) filtrados = filtrados.filter(e => e.categoria === catAtual);
   
   const tbody = document.getElementById('tbodyErros');
   const cntErros = document.getElementById('cntErros');
@@ -1067,7 +1104,7 @@ function renderErros(){
   if(cntErros) cntErros.textContent = filtrados.length + ' registros';
   
   if(!filtrados.length){
-    tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">Nenhum erro registrado.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Nenhum erro registrado.</td></tr>';
     return;
   }
   
@@ -1076,6 +1113,15 @@ function renderErros(){
     let awbTexto = e.awb || '';
     let produtoTexto = e.categoria === 'LOTE NAO LOCALIZADO NO ICS' ? '—' : (e.produto || '—');
     let palletTexto = e.pallet || '—';
+    
+    let erroTexto = e.mensagem || e.categoria || '—';
+    if (erroTexto.includes('não foi encontrado na base de Códigos Clientes')) {
+      erroTexto = 'Devolver';
+    } else if (e.categoria === 'LOTE NAO LOCALIZADO NO ICS' || erroTexto.includes('ICS')) {
+      erroTexto = 'Não localizado no ICS';
+    } else if (e.categoria === 'LOTE DUPLICADO' || erroTexto.includes('duplicado')) {
+      erroTexto = 'Lote duplicado';
+    }
     
     const colunaAwbHtml = awbTexto 
       ? `<code style="background: rgba(255,255,255,0.07); padding: 2px 6px; border-radius: 4px; color: #60a5fa; font-weight: 600;">${awbTexto}</code>`
@@ -1086,18 +1132,18 @@ function renderErros(){
       <td><strong style="font-size: 14px;">${loteTexto}</strong></td>
       <td>${colunaAwbHtml}</td>
       <td style="font-size: 13px; color: var(--primary);"><strong>${palletTexto}</strong></td>
+      <td style="font-size: 13px; color: var(--text-muted, #94a3b8); white-space: nowrap;">${erroTexto}</td>
     </tr>`;
   }).join('');
 }
-  
+
 function baixarErrosExcel() {
   const buscaEl = document.getElementById('buscaErros');
   const busca = buscaEl ? norm(buscaEl.value) : '';
   const selCat = document.getElementById('filtroCatErros');
   const catAtual = selCat ? selCat.value : '';
-  const categoriasPadrao = ['LOTE DUPLICADO', 'LOTE NAO LOCALIZADO NO ICS', 'DEVOLVER, CADASTRAR NO SENIOR'];
   
-  let filtrados = STORE.erros.filter(e => categoriasPadrao.includes(e.categoria));
+  let filtrados = catAtual ? STORE.erros.filter(e => e.categoria === catAtual) : STORE.erros;
   if(busca) {
     filtrados = filtrados.filter(e => {
       return norm(e.produto).includes(busca) ||
@@ -1107,7 +1153,6 @@ function baixarErrosExcel() {
         norm(e.categoria).includes(busca);
     });
   }
-  if(catAtual) filtrados = filtrados.filter(e => e.categoria === catAtual);
   
   if(!filtrados.length){
     toast('Não há registros para baixar.', 'warning');
@@ -1123,42 +1168,34 @@ function baixarErrosExcel() {
   baixarExcel([{nome: "Erros Filtrados", data: dadosParaExportar}], "relatorio_erros_visual.xlsx");
   toast('Arquivo Excel baixado com sucesso!', 'success');
 }
+
 function compararRelacaoComICS() {
-  if (!STORE.relacao || STORE.relacao.length === 0) return;
-  
-  const lotesIcsValidosSet = new Set(
-    STORE.ics ? STORE.ics.map(item => normLote(item.lote)) : []
+  if (!STORE.ics || STORE.ics.length === 0 || !STORE.relacao || STORE.relacao.length === 0) return;
+  const lotesIcsSet = new Set(STORE.ics.map(item => normLote(item.lote)));
+  const lotesComErroDevolver = new Set(
+    STORE.erros.filter(e => e.categoria === 'DEVOLVER, CADASTRAR NO SENIOR').map(e => normLote(e.lote))
   );
-  
+
   const relacaoValida = [];
-  
   STORE.relacao.forEach(item => {
     const loteNorm = normLote(item.lote);
-    const existeNoIcs = lotesIcsValidosSet.has(loteNorm);
-
-    if (existeNoIcs) {
+    if (lotesIcsSet.has(loteNorm)) {
       relacaoValida.push(item);
     } else {
-      const temErroCadastro = STORE.erros.some(
-        e => e.categoria === 'DEVOLVER, CADASTRAR NO SENIOR' && normLote(e.lote) === loteNorm
-      );
-
-      if (!temErroCadastro) {
+      if (!lotesComErroDevolver.has(loteNorm)) {
         registrarErro(
           'LOTE NAO LOCALIZADO NO ICS',
           `O lote "${item.lote}" consta na Relação, mas não foi localizado no arquivo ICS.`,
-          item.pallet || 'N/A',
-          item.lote,
-          '',
-          ''
+          item.pallet || item.pallete || 'N/A',
+          item.lote, '', ''
         );
       }
     }
   });
-  
   STORE.relacao = relacaoValida;
   sincronizarRelacaoWithIcs();
 }
+
 function sincronizarRelacaoWithIcs() {
   if (!STORE.ics || !STORE.relacao) return;
   STORE.ics.forEach(itemIcs => {
@@ -1170,6 +1207,7 @@ function sincronizarRelacaoWithIcs() {
     }
   });
 }
+
 function importarRelacao(input){
   if(!input.files.length) return;
   lerArquivo(input.files[0], jsonRelacao => {
@@ -1178,6 +1216,7 @@ function importarRelacao(input){
     input.value = '';
   });
 }
+
 function processarRelacaoIndependente(jsonRelacao) {
   const chavesVistas = new Set();
   STORE.relacao = [];
@@ -1190,19 +1229,14 @@ function processarRelacaoIndependente(jsonRelacao) {
     const status = val(linha, ['STATUS', 'ALTURA', 'HEIGHT']);
     const {num, cat} = parseAltura(status);
     const alturaFormatada = num === null ? norm(status) : num;
-
     const chaveUnica = `${lote}_${pallet}`;
 
-    if (chavesVistas.has(chaveUnica)) {
-      return; 
-    }
-
+    if (chavesVistas.has(chaveUnica)) return; 
     chavesVistas.add(chaveUnica);
     STORE.relacao.push({lote, pallet, altura: alturaFormatada, categoria: cat, obs: ''});
   });
   
   if(STORE.ics.length > 0) compararRelacaoComICS();
-  
   atualizarProcessosSubsequentes();
   renderRelacao(); 
   renderIcs(); 
@@ -1235,6 +1269,7 @@ function renderRelacao(){
     </tr>
   `).join('');
 }
+
 function importarIcs(input){
   if(!input.files.length) return;
   lerArquivo(input.files[0], jsonIcs => {
@@ -1243,6 +1278,7 @@ function importarIcs(input){
     input.value = '';
   });
 }
+
 function renderIcs(){
   const buscaEl = document.getElementById('buscaIcs');
   const busca = buscaEl ? norm(buscaEl.value) : '';
@@ -1262,6 +1298,7 @@ function renderIcs(){
     </tr>
   `).join('');
 }
+
 function importarArmazem(input){
   if(!input.files.length) return;
   lerArquivo(input.files[0], json => {
@@ -1301,16 +1338,19 @@ function importarArmazem(input){
     input.value = '';
   });
 }
+
 function normalizarEndereco(e){
   let s = e.replace(/[^A-Z0-9]/g,'');
   if(s.length === 11 && s.startsWith('PP')) return s;
   if(s.startsWith('PP') && s.length >= 11) return s.substring(0,11);
   return null;
 }
+
 function derivarLado(endereco){
   const prefixo = parseInt(endereco.substring(9,11), 10);
   return (prefixo % 2 === 0) ? 'PAR' : 'IMPAR';
 }
+
 function processarDadosEstoqueLocal(json){
   if(!json.length) return;
   STORE.estoqueLocalRaw = json;
@@ -1330,6 +1370,7 @@ function processarDadosEstoqueLocal(json){
     });
   });
 }
+
 function importarEstoqueLocalInicial(input) {
   if(!input.files.length) return;
   lerArquivo(input.files[0], json => {
@@ -1342,6 +1383,7 @@ function importarEstoqueLocalInicial(input) {
     input.value = '';
   });
 }
+
 function importarEstoquePosSubida(input) {
   if (!input.files.length) return;
   lerArquivo(input.files[0], json => {
@@ -1352,11 +1394,12 @@ function importarEstoquePosSubida(input) {
     }
     processarDadosEstoqueLocal(json);
     gerarValidacaoFinal();
-    toast('Estoque atualizado e Validação Final realizada com sucesso!', 'success');
+    toast('Estoque atualizado e Validação Final recalculada com sucesso!', 'success');
     tocarSomNotificacao();
     input.value = '';
   });
 }
+
 function executarAlocacao(){
   if(!STORE.armazem.length){ toast('Importe o Armazém antes de alocar','warning'); abrirModalInicio(); return; }
   const rua = document.getElementById('alocRua').value;
@@ -1417,6 +1460,7 @@ function executarAlocacao(){
     toast('Alocação executada com sucesso!', 'success');
   }
 }
+
 function renderAlocacao(){
   const selPallet = document.getElementById('filtroPalletAloc');
   if(!selPallet) return;
@@ -1426,7 +1470,10 @@ function renderAlocacao(){
   selPallet.value = pallets.includes(atual) ? atual : '';
   const palletSel = selPallet.value;
   const tbody = document.getElementById('tbodyAlocacao');
-  const filtrados = STORE.alocacao.filter(r => !palletSel || norm(r.pallet) === norm(palletSel));
+  
+  let filtrados = STORE.alocacao.filter(r => !palletSel || norm(r.pallet) === norm(palletSel));
+  filtrados.sort((a, b) => norm(a.pallet).localeCompare(norm(b.pallet)));
+
   const cnt = document.getElementById('cntAlocacao');
   if(cnt) cnt.textContent = filtrados.length + ' registros';
   if(!tbody) return;
@@ -1437,11 +1484,12 @@ function renderAlocacao(){
       <td>${r.produto}</td>
       <td>${r.awb}</td>
       <td><strong>${r.lote}</strong></td>
-      <td>${r.pallet}</td>
+      <td><strong style="color: var(--primary);">${r.pallet}</strong></td>
       <td><span class="${r.endereco === 'SEM POSIÇÃO DISPONÍVEL' ? 'badge red' : ''}">${r.endereco}</span></td>
     </tr>
   `).join('');
 }
+
 function gerarEntrada(){
   STORE.entrada = [];
   const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
@@ -1453,9 +1501,7 @@ function gerarEntrada(){
       const nomeFantasiaIcs = itemIcs ? itemIcs.produto : item.produto;
       if(!nomeFantasiaIcs) return;
       const codObj = STORE.codigos.find(c => norm(c.nome) === norm(nomeFantasiaIcs));
-      if(!codObj || !codObj.codigo) {
-        return;
-      }
+      if(!codObj || !codObj.codigo) return;
       STORE.entrada.push({
         Codigo: codObj.codigo,
         Endereço: item.endereco,
@@ -1468,6 +1514,7 @@ function gerarEntrada(){
   renderEntrada();
   renderErros();
 }
+
 function renderEntrada(){
   const buscaEl = document.getElementById('buscaEntrada');
   const busca = buscaEl ? norm(buscaEl.value) : '';
@@ -1479,21 +1526,21 @@ function renderEntrada(){
   if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="5">Nenhum registro de entrada.</td></tr>'; return; }
   tbody.innerHTML = filtrados.map(e => `<tr><td><strong>${e.Codigo}</strong></td><td>${e.Endereço}</td><td>${e.Estoque}</td><td>${e.DataVencimento}</td><td><strong>${e.Awb}</strong></td></tr>`).join('');
 }
-function baixarEntradaExcel(){
-  if(!STORE.entrada.length){ toast('Nenhum dado na aba Entrada', 'warning'); return; }
-  baixarExcel([{nome: 'Entrada', data: STORE.entrada}], 'entrada_wms.xlsx');
-  toast('Baixado com sucesso!', 'success');
-}
+
 function gerarSaida(){
   STORE.saida = [];
   const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
+  const awbsProcessadosSaida = new Set();
   
   STORE.ics.forEach(item => {
     if(lotesComErro.has(normLote(item.lote))) return;
     let awbIcs = norm(item.awb);
-    if(awbIcs){
-      const encontrado = STORE.estoqueLocal.find(e => norm(e.awb) === awbIcs);
-      if(encontrado){
+    if(awbIcs && !awbsProcessadosSaida.has(awbIcs)){
+      const encontrados = STORE.estoqueLocal.filter(e => norm(e.awb) === awbIcs);
+      if(encontrados.length > 0){
+        const encontrado = encontrados[0];
+        awbsProcessadosSaida.add(awbIcs);
+        
         let codigoCliente = '';    
         if(encontrado.produto) {
           const codNoEstoque = STORE.codigos.find(c => norm(c.codigo) === norm(encontrado.produto) || norm(c.nome) === norm(encontrado.produto));
@@ -1520,45 +1567,152 @@ function gerarSaida(){
       }
     }
   });
+
+  const enderecosAcumulo = ['DEV01010001']; 
+  STORE.estoqueLocal.forEach(est => {
+    let localNorm = norm(est.local);
+    if (enderecosAcumulo.includes(localNorm)) {
+      let awbEstoque = norm(est.awb);
+      if (awbEstoque && !awbsProcessadosSaida.has(awbEstoque)) {
+        awbsProcessadosSaida.add(awbEstoque);
+
+        let codigoCliente = '';
+        if (est.produto) {
+          const codNoEstoque = STORE.codigos.find(c => norm(c.codigo) === norm(est.produto) || norm(c.nome) === norm(est.produto));
+          if (codNoEstoque) {
+            codigoCliente = codNoEstoque.codigo;
+          } else if (/^\d+$/.test(est.produto.trim())) {
+            codigoCliente = est.produto.trim();
+          } else {
+            codigoCliente = est.produto.trim();
+          }
+        }
+
+        STORE.saida.push({
+          Codigo: codigoCliente || 'GERAL',
+          Endereço: est.local,
+          Estoque: '0',
+          DataVencimento: '01/02/2200',
+          Awb: awbEstoque
+        });
+      }
+    }
+  });
   renderSaida();
 }
+
 function renderSaida(){
   const buscaEl = document.getElementById('buscaSaida');
   const busca = buscaEl ? norm(buscaEl.value) : '';
   const tbody = document.getElementById('tbodySaida');
   const cnt = document.getElementById('cntSaida');
   if(!tbody) return;
-  const filtrados = STORE.saida.filter(s => !busca || norm(s.Codigo).includes(busca) || norm(s.Awb).includes(busca));
+  
+  const filtrados = STORE.saida.filter(s => !busca || norm(s.Codigo).includes(busca) || norm(s.Awb).includes(busca) || norm(s.Endereço).includes(busca));
   if(cnt) cnt.textContent = filtrados.length + ' registros';
   if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="5">Nenhum registro de saída localizado.</td></tr>'; return; }
   tbody.innerHTML = filtrados.map(s => `<tr><td><strong>${s.Codigo}</strong></td><td>${s.Endereço}</td><td>${s.Estoque}</td><td>${s.DataVencimento}</td><td><strong>${s.Awb}</strong></td></tr>`).join('');
 }
+
 function baixarSaidaExcel(){
   if(!STORE.saida.length){ toast('Nenhum dado na aba Saída', 'warning'); return; }
   baixarExcel([{nome: 'Saida', data: STORE.saida}], 'saida_wms.xlsx');
   toast('Baixado com sucesso!', 'success');
 }
+
 function gerarConcatenar(){
   STORE.concatenar = [];
   const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
+  const awbsEntradaAdicionados = new Set();
+  const awbsSaidaAdicionados = new Set();
   
   STORE.alocacao.forEach(item => {
     if(lotesComErro.has(normLote(item.lote))) return;
     if(item.endereco && item.endereco !== 'SEM POSIÇÃO DISPONÍVEL'){
-      let codigoCliente = '';
-      const codObj = STORE.codigos.find(c => norm(c.nome) === norm(item.produto));
-      if(codObj) codigoCliente = codObj.codigo;
-      else codigoCliente = item.produto || 'GERAL';
-      
-      STORE.concatenar.push(formatarLinhaConcatenada({ codigo: codigoCliente, endereco: item.endereco, estoque: '1', dataVencimento: '01/02/2200', awb: item.awb || '' }));
+      let awbNorm = norm(item.awb);
+      if(awbNorm && !awbsEntradaAdicionados.has(awbNorm)) {
+        awbsEntradaAdicionados.add(awbNorm);
+        let codigoCliente = '';
+        const codObj = STORE.codigos.find(c => norm(c.nome) === norm(item.produto));
+        if(codObj) codigoCliente = codObj.codigo;
+        else codigoCliente = item.produto || 'GERAL';
+        
+        STORE.concatenar.push(formatarLinhaConcatenada({ 
+          codigo: codigoCliente, 
+          endereco: item.endereco, 
+          estoque: '1', 
+          dataVencimento: '01/02/2200', 
+          awb: item.awb || '' 
+        }));
+      }
     }
   });
   
   STORE.saida.forEach(s => {
-    STORE.concatenar.push(formatarLinhaConcatenada({ codigo: s.Codigo || '', endereco: s.Endereço || '', estoque: s.Estoque || '0', dataVencimento: s.DataVencimento || '01/02/2200', awb: s.Awb || '' }));
+    let awbNorm = norm(s.Awb);
+    if(awbNorm && !awbsSaidaAdicionados.has(awbNorm)) {
+      awbsSaidaAdicionados.add(awbNorm);
+      STORE.concatenar.push(formatarLinhaConcatenada({ 
+        codigo: s.Codigo || '', 
+        endereco: s.Endereço || '', 
+        estoque: s.Estoque || '0', 
+        dataVencimento: s.DataVencimento || '01/02/2200', 
+        awb: s.Awb || '' 
+      }));
+    }
   });
   renderConcatenar();
 }
+
+function dispararDownloadFicheiro(conteudo, nomeFicheiro) {
+  const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = nomeFicheiro;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function baixarAmbosSaida() {
+  const dados = STORE.saida || STORE.concatenar;
+  if (!dados || dados.length === 0) {
+    toast('Nenhum dado disponível para gerar os ficheiros.', 'warning');
+    return;
+  }
+  
+  const itensEstoqueZero = dados.filter(item => {
+    const estoque = parseFloat(String(item.estoque || item.Estoque || 0).replace(',', '.'));
+    return isNaN(estoque) || estoque === 0;
+  });
+
+  if (itensEstoqueZero.length === 0) {
+    toast('Não existem registos com estoque 0 para exportar.', 'warning');
+    return;
+  }
+
+  const linhasFormatadas = itensEstoqueZero.map(item => {
+    const c = String(item.codigo || item.Codigo || '').padEnd(25, ' ');
+    const e = String(item.endereco || item.Endereco || '').padEnd(31, ' ');
+    const q = String(item.estoque || item.Estoque || '0').padEnd(10, ' ');
+    const d = String(item.dataVencimento || item.DataVencimento || '01/02/2200').padEnd(12, ' ');
+    const a = String(item.awb || item.Awb || '').padEnd(53, ' ');
+    return `${c}${e}${q}${d}${a}`;
+  });
+
+  const conteudoInvdet = linhasFormatadas.join('\r\n');
+  dispararDownloadFicheiro(conteudoInvdet, 'Saida.INVDET');
+
+  setTimeout(() => {
+    const enderecosUnicos = [...new Set(itensEstoqueZero.map(i => i.endereco || i.Endereco))].filter(Boolean);
+    const conteudoLocais = enderecosUnicos.join('\r\n');
+    dispararDownloadFicheiro(conteudoLocais, 'LOCAIS.TXT');
+    toast(`Sucesso! ${itensEstoqueZero.length} registos de estoque 0 descarregados.`, 'success');
+  }, 300);
+}
+
 function formatarLinhaConcatenada(obj){
   const c = String(obj.codigo || '').padEnd(25, ' ');
   const e = String(obj.endereco || '').padEnd(31, ' ');
@@ -1567,6 +1721,7 @@ function formatarLinhaConcatenada(obj){
   const a = String(obj.awb || '').padEnd(53, ' ');
   return { texto: `${c}${e}${q}${d}${a}`, raw: obj };
 }
+
 function renderConcatenar(){
   const buscaEl = document.getElementById('buscaConcatenar');
   const busca = buscaEl ? norm(buscaEl.value) : '';
@@ -1581,6 +1736,7 @@ function renderConcatenar(){
   }
   tbody.innerHTML = filtrados.map(item => `<tr><td><code style="font-family:monospace; font-size:.88rem; background:#0f172a; color:#f8fafc; padding:6px 10px; display:block; white-space:pre; border-radius:4px; border:1px solid rgba(255,255,255,0.05);">${item.texto}</code></td></tr>`).join('');
 }
+
 function baixarConcatenarTxt(){
   if(!STORE.concatenar.length) gerarConcatenar();
   if(!STORE.concatenar.length){ toast('Sem dados para gerar arquivo.', 'warning'); return; }
@@ -1593,6 +1749,7 @@ function baixarConcatenarTxt(){
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   toast('Arquivo gerado com sucesso!', 'success');
 }
+
 function baixarLocaisTxt(){
   if(!STORE.concatenar.length) gerarConcatenar();
   const locais = STORE.concatenar.map(item => item.raw.endereco).filter(Boolean).join('\n');
@@ -1602,6 +1759,7 @@ function baixarLocaisTxt(){
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   toast('LOCAIS.TXT gerado!', 'success');
 }
+
 function gerarPalletEndereco(){
   STORE.palletEndereco = [];
   const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
@@ -1609,24 +1767,14 @@ function gerarPalletEndereco(){
   
   STORE.alocacao.forEach(item => {
     if(lotesComErro.has(normLote(item.lote))) return;
-    
-    let pVal = item.pallet || item.pallete || item.palete || '';
-    
-    if(!pVal && item.lote) {
-      const matchIcs = STORE.ics.find(i => normLote(i.lote) === normLote(item.lote));
-      if(matchIcs) pVal = matchIcs.pallet || matchIcs.pallete || matchIcs.palete || '';
-    }
-    
-    pVal = String(pVal).trim();
-    
-    if(pVal && item.endereco && item.endereco !== 'SEM POSIÇÃO DISPONÍVEL' && !mapa.has(pVal)){
-      mapa.set(pVal, item.endereco);
+    if(item.pallet && item.endereco && item.endereco !== 'SEM POSIÇÃO DISPONÍVEL' && !mapa.has(item.pallet)){
+      mapa.set(item.pallet, item.endereco);
     }
   });
-  
   mapa.forEach((endereco, pallet) => STORE.palletEndereco.push({ pallet, endereco }));
   renderPalletEndereco();
 }
+
 function renderPalletEndereco(){
   const buscaEl = document.getElementById('buscaPalletEndereco');
   const busca = buscaEl ? norm(buscaEl.value) : '';
@@ -1638,6 +1786,7 @@ function renderPalletEndereco(){
   if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="2">Nenhum dado encontrado.</td></tr>'; return; }
   tbody.innerHTML = filtrados.map(item => `<tr><td><strong>${item.pallet}</strong></td><td>${item.endereco}</td></tr>`).join('');
 }
+
 function copiarTabelaOutlook() {
   if(!STORE.palletEndereco.length) gerarPalletEndereco();
   if(!STORE.palletEndereco.length){ toast('Não há dados para copiar.', 'warning'); return; }
@@ -1648,6 +1797,7 @@ function copiarTabelaOutlook() {
     toast('Tabela copiada com sucesso para o Outlook!', 'success');
   }).catch(err => toast('Erro ao copiar', 'error'));
 }
+
 function gerarValidacaoFinal() {
   STORE.validacaoFinal = [];
   if (!STORE.alocacao || STORE.alocacao.length === 0) {
@@ -1661,18 +1811,12 @@ function gerarValidacaoFinal() {
     if (lotesComErro.has(normLote(itemAloc.lote))) return;
     
     const awbProcurado = norm(itemAloc.awb);
-    const itensEstoque = STORE.estoqueLocal.filter(e => norm(e.awb) === awbProcurado);
-    
-    let enderecoSenior = '—';
+    const itemEstoque = STORE.estoqueLocal.find(e => norm(e.awb) === awbProcurado);
+    const enderecoSenior = itemEstoque ? itemEstoque.local : '—';
     let statusValidacao = 'Fora do Senior';
 
-    if (itensEstoque.length > 0) {
-      const itemMaisRecente = itensEstoque[itensEstoque.length - 1];
-      const itemCorrespondente = itensEstoque.find(e => norm(e.local) === norm(itemAloc.endereco));
-      const itemFinal = itemCorrespondente || itemMaisRecente;
-      enderecoSenior = itemFinal.local;
-
-      if (norm(enderecoSenior) === norm(itemAloc.endereco)) {
+    if (itemEstoque) {
+      if (norm(itemEstoque.local) === norm(itemAloc.endereco)) {
         statusValidacao = 'No senior';
       } else {
         statusValidacao = 'Divergência de Endereço no Senior';
@@ -1689,6 +1833,7 @@ function gerarValidacaoFinal() {
   });
   renderValidacaoFinal();
 }
+
 function renderValidacaoFinal() {
   const buscaEl = document.getElementById('buscaValidacaoFinal');
   const busca = buscaEl ? norm(buscaEl.value) : '';
@@ -1703,26 +1848,31 @@ function renderValidacaoFinal() {
   );
   
   if (statusFiltro === 'NAO_SUBIU') {
-    filtrados = filtrados.filter(v => norm(v.status).includes('FORA DO SENIOR') || norm(v.status).includes('DIVERGENCIA'));
+    filtrados = filtrados.filter(v => {
+      let st = norm(v.status);
+      return st.includes("NAO SUBIU") || st.includes("PENDENTE") || st.includes("ERRO") || st.includes("DIVERGENCIA");
+    });
   } else if (statusFiltro === 'SUBIU') {
-    filtrados = filtrados.filter(v => norm(v.status).includes('NO SENIOR'));
+    filtrados = filtrados.filter(v => {
+      let st = norm(v.status);
+      return !st.includes("NAO SUBIU") && !st.includes("PENDENTE") && !st.includes("ERRO") && !st.includes("DIVERGENCIA");
+    });
   }
   
   if(cnt) cnt.textContent = filtrados.length + ' registros';
   
   if(!filtrados.length) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Nenhuma validação executada ou registros não encontrados.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Nenhuma validação executada ou registros não encontrados. Certifique-se de ter importado o Estoque Local do Senior e executado a alocação.</td></tr>';
     return;
   }
   
   tbody.innerHTML = filtrados.map(v => {
-    let textoStatus = v.status || 'Fora do Senior';
+    let textoStatus = v.status || "Validar o arquivo não subiu";
     let estilocss = '';
-    
-    if (norm(textoStatus).includes('NO SENIOR') && !norm(textoStatus).includes('FORA')) {
-      estilocss = 'color: #00ff66; text-shadow: 0 0 8px rgba(0, 255, 102, 0.8); font-weight: 800;';
+    if (norm(textoStatus).includes("NAO SUBIU") || norm(textoStatus).includes("PENDENTE") || norm(textoStatus).includes("ERRO") || norm(textoStatus).includes("DIVERGENCIA")) {
+      estilocss = 'color: #ff3333; text-shadow: 0 0 8px rgba(255, 51, 51, 0.8), 0 0 15px rgba(255, 51, 51, 0.4); font-weight: 800;';
     } else {
-      estilocss = 'color: #ff3333; text-shadow: 0 0 8px rgba(255, 51, 51, 0.8); font-weight: 800;';
+      estilocss = 'color: #00ff66; text-shadow: 0 0 8px rgba(0, 255, 102, 0.8), 0 0 15px rgba(0, 255, 102, 0.4); font-weight: 800;';
     }
 
     return `<tr>
@@ -1734,6 +1884,7 @@ function renderValidacaoFinal() {
     </tr>`;
   }).join('');
 }
+
 function baixarValidacaoFinalExcel() {
   if(!STORE.validacaoFinal.length) {
     toast('Nenhum dado de validação para baixar.', 'warning');
@@ -1749,6 +1900,7 @@ function baixarValidacaoFinalExcel() {
   baixarExcel([{ nome: "Validacao Final", data: dados }], "relatorio_validacao_final.xlsx");
   toast('Relatório de Validação Final baixado com sucesso!', 'success');
 }
+
 function salvarHistorico() {
   const abasParaExcel = [
     { nome: "Relacao", data: STORE.relacao.length ? STORE.relacao : [{ Status: "Sem dados" }] },
@@ -1781,6 +1933,7 @@ function salvarHistorico() {
   localStorage.setItem('wms_backup_geral', JSON.stringify(estadoGeral));
   toast('Histórico salvo e arquivo Excel baixado com sucesso!', 'success');
 }
+
 function confirmarZerar() {
   abrirModal('Zerar Sistema', 'Tem certeza que deseja apagar todos os dados e reiniciar o sistema?', '🗑️', () => {
     localStorage.removeItem('wms_backup_geral');
@@ -1799,6 +1952,7 @@ function confirmarZerar() {
     toast('Sistema zerado com sucesso.', 'info');
   });
 }
+
 function tocarSomNotificacao() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1840,6 +1994,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if(!STORE.armazem.length || !STORE.estoqueLocal.length) {
     abrirModalInicio();
+  }
+
+  const selRuaAloc = document.getElementById('alocRua');
+  if (selRuaAloc) {
+    selRuaAloc.addEventListener('change', () => {
+      atualizarOpcoesLadoPorRua();
+      renderAlocacao();
+    });
+  }
+
+  const selPalletAloc = document.getElementById('filtroPalletAloc');
+  if (selPalletAloc) {
+    selPalletAloc.addEventListener('change', () => {
+      renderAlocacao();
+    });
   }
 });
 </script>
