@@ -1003,11 +1003,18 @@ function executarAlocacao() {
 function executarAlocacaoSilenciosa() {
   const rua = document.getElementById('alocRua') ? document.getElementById('alocRua').value : '01';
   let posicoes = STORE.armazem.filter(a => a.rua === rua);
-  const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
+  
+  // Considera apenas lotes com erro crítico de duplicação para bloquear a alocação, permitindo o fluxo normal
+  const lotesBloqueados = new Set(
+    STORE.erros
+      .filter(e => e.categoria === 'LOTE DUPLICADO')
+      .map(e => normLote(e.lote))
+  );
+  
   const porPallet = {};
   
   STORE.ics.forEach(r => {
-    if (lotesComErro.has(normLote(r.lote))) return; 
+    if (lotesBloqueados.has(normLote(r.lote))) return; 
     let chavePallet = (r.pallet && r.pallet !== 'N/A' && r.pallet !== '—') ? norm(r.pallet) : `AWB_${r.awb}_${r.lote}`;
     if (!porPallet[chavePallet]) porPallet[chavePallet] = [];
     porPallet[chavePallet].push(r);
