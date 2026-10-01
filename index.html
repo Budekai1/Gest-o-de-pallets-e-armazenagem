@@ -1920,22 +1920,46 @@ function baixarValidacaoFinalExcel(){
   toast('Relatório baixado com sucesso!', 'success');
 }
 
-function salvarHistorico(){
-  const dadosHistorico = {
-    relacao: STORE.relacao,
-    ics: STORE.ics,
-    alocacao: STORE.alocacao,
-    erros: STORE.erros,
-    codigos: STORE.codigos
-  };
-  const jsonStr = JSON.stringify(dadosHistorico, null, 2);
-  const blob = new Blob([jsonStr], {type: 'application/json;charset=utf-8'});
-  const hoje = new Date();
-  const nomeArquivo = `historico_wms_${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}.json`;
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = nomeArquivo;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-  toast('Histórico salvo com sucesso!', 'success');
+function salvarHistorico() {
+  try {
+    // Monta o array de abas com os dados atuais do STORE (ou placeholders se estiverem vazios)
+    const abasParaExcel = [
+      { nome: "Relacao", data: STORE.relacao.length ? STORE.relacao : [{ Status: "Sem dados" }] },
+      { nome: "ICS", data: STORE.ics.length ? STORE.ics : [{ Status: "Sem dados" }] },
+      { nome: "Armazem", data: STORE.armazem.length ? STORE.armazem : [{ Status: "Sem dados" }] },
+      { nome: "Alocacao", data: STORE.alocacao.length ? STORE.alocacao : [{ Status: "Sem dados" }] },
+      { nome: "Entrada", data: STORE.entrada.length ? STORE.entrada : [{ Status: "Sem dados" }] },
+      { nome: "EstoqueLocal", data: STORE.estoqueLocal.length ? STORE.estoqueLocal : [{ Status: "Sem dados" }] },
+      { nome: "Saida", data: STORE.saida.length ? STORE.saida : [{ Status: "Sem dados" }] },
+      { nome: "CodigosClientes", data: STORE.codigos.length ? STORE.codigos : [{ Status: "Sem dados" }] },
+      { nome: "Erros", data: STORE.erros.length ? STORE.erros : [{ Status: "Sem dados" }] },
+      { nome: "ValidacaoFinal", data: STORE.validacaoFinal.length ? STORE.validacaoFinal : [{ Status: "Sem dados" }] }
+    ];
+
+    // Cria o arquivo Excel (.xlsx) dividindo cada seção em uma aba própria
+    baixarExcel(abasParaExcel, "historico_wms_completo.xlsx");
+
+    // Salva também no localStorage para backup geral do sistema
+    const estadoGeral = {
+      relacao: STORE.relacao,
+      ics: STORE.ics,
+      armazem: STORE.armazem,
+      alocacao: STORE.alocacao,
+      entrada: STORE.entrada,
+      estoqueLocal: STORE.estoqueLocal,
+      saida: STORE.saida,
+      concatenar: STORE.concatenar,
+      codigos: STORE.codigos,
+      erros: STORE.erros,
+      palletEndereco: STORE.palletEndereco,
+      validacaoFinal: STORE.validacaoFinal
+    };
+    localStorage.setItem('wms_backup_geral', JSON.stringify(estadoGeral));
+
+    toast('Histórico exportado para Excel com sucesso!', 'success');
+  } catch (err) {
+    toast('Erro ao gerar o arquivo Excel do histórico: ' + err.message, 'error');
+  }
 }
 
 function confirmarZerar(){
