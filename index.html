@@ -1004,7 +1004,6 @@ function executarAlocacaoSilenciosa() {
   const rua = document.getElementById('alocRua') ? document.getElementById('alocRua').value : '01';
   let posicoes = STORE.armazem.filter(a => a.rua === rua);
   
-  // Considera apenas lotes com erro crítico de duplicação para bloquear a alocação, permitindo o fluxo normal
   const lotesBloqueados = new Set(
     STORE.erros
       .filter(e => e.categoria === 'LOTE DUPLICADO')
@@ -1027,8 +1026,12 @@ function executarAlocacaoSilenciosa() {
     const registros = porPallet[pallet];
     if(registros.length === 0) return;
     const cat = registros[0].categoria;
-    let pos = posicoes.find(p => !usadas.has(p.endereco) && p.categoria === cat);
-    if(!pos) pos = posicoes.find(p => !usadas.has(p.endereco));
+    
+    // Tenta achar pela categoria exata; se não encontrar ou se for '—', pega a primeira disponível na rua
+    let pos = posicoes.find(p => !usadas.has(p.endereco) && cat && cat !== '—' && p.categoria === cat);
+    if(!pos) {
+      pos = posicoes.find(p => !usadas.has(p.endereco));
+    }
     
     if(pos) {
       usadas.add(pos.endereco);
@@ -1038,7 +1041,7 @@ function executarAlocacaoSilenciosa() {
           awb: r.awb, 
           lote: r.lote, 
           pallet: r.pallet, 
-          categoria: cat, 
+          categoria: cat && cat !== '—' ? cat : pos.categoria, 
           endereco: pos.endereco
         });
       });
