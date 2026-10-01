@@ -192,11 +192,6 @@ tr:hover td { background: #1a2538; }
   border-left: 1px solid var(--border);
 }
 
-#panel-erros .table-container, #panel-erros .panel-body, .tabela-erros-wrapper {
-  flex: 1;
-  overflow-y: auto !important;
-}
-
 #panel-erros.show, .panel.show { transform: translateX(0) !important; }
 
 .panel header { 
@@ -319,9 +314,9 @@ tr:hover td { background: #1a2538; }
   <h1><span class="logo">📦</span> Devolução - Gestão de Pallets e armazém.</h1>
   <button class="hbtn" onclick="abrirPainel('erros')">🚨 Erros<span class="badge" id="badgeErros" style="background:#ef4444;color:#fff;border-radius:999px;font-size:.68rem;padding:1px 7px;font-weight:700;">0</span></button>
   <button class="hbtn success" onclick="salvarHistorico()">💾 Baixar Historico </button>
-  <button class="hbtn danger" onclick="confirmarZerar()">🗑️ Reiniciar </button>
+  <button class="hbtn danger" onclick="confirmarZerar()">🗑️️ Reiniciar </button>
   <button class="hbtn" onclick="abrirModalInicio()">📥 </button>
-  <button class="hbtn" onclick="abrirPainel('codigos')">⚙️ Códidos Clientes<span class="badge" id="badgeCodigos">0</span></button>
+  <button class="hbtn" onclick="abrirPainel('codigos')">⚙️ Códigos Clientes<span class="badge" id="badgeCodigos">0</span></button>
 </header>
 <nav id="mainNav">
   <button class="active" data-tab="relacao" onclick="mudarAba('relacao')">📋 Relação</button>
@@ -570,7 +565,7 @@ tr:hover td { background: #1a2538; }
         <option value="">Todas as categorias</option>
       </select>
       <button class="btn amber sm" onclick="baixarErrosExcel()">📥 Baixar (Excel)</button>
-      <button class="btn red sm" onclick="confirmarLimparErros()">🗑️ Limpar Erros</button>
+      <button class="btn red sm" onclick="confirmarLimparErros()">🗑️️ Limpar Erros</button>
     </div>
     <div class="table-wrap">
       <table>
@@ -594,7 +589,7 @@ tr:hover td { background: #1a2538; }
 <script>
 /* --- SCRIPTS (Index.js) --- */
 document.addEventListener('click', function unlockAudio() {
-try { const audioTest = new Audio(); audioTest.play().catch(() => {}); } catch (e) {}
+  try { const audioTest = new Audio(); audioTest.play().catch(() => {}); } catch (e) {}
 }, { once: true });
 
 const LS_KEY = 'wms_codigos_clientes';
@@ -665,7 +660,7 @@ function parseAltura(v){
 }
 
 function toast(msg, tipo='info'){
-  const icons = {success:'✅', error:'❌', info:'ℹ️', warning:'⚠️'};
+  const icons = {success:'✅', error:'❌', info:'ℹ️️', warning:'⚠️'};
   const c = document.getElementById('toast-container');
   if(!c) return;
   const el = document.createElement('div');
@@ -738,7 +733,7 @@ let modalCallback = null;
 function abrirModal(title, msg, icon, cb){
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalMsg').textContent = msg;
-  document.getElementById('modalIcon').textContent = icon || '⚠️️';
+  document.getElementById('modalIcon').textContent = icon || '⚠';
   modalCallback = cb;
   document.getElementById('modalConfirm').classList.add('show');
 }
@@ -761,17 +756,23 @@ function mudarAba(nome){
   if(tabEl) tabEl.classList.add('active');
   document.querySelectorAll('#mainNav button').forEach(b => b.classList.toggle('active', b.dataset.tab === nome));
   if(nome === 'saida') gerarSaida();
-  if(nome === 'entrada') gerarEntrada();
   if(nome === 'concatenar') gerarConcatenar();
   if(nome === 'pallet-endereco') gerarPalletEndereco();
   if(nome === 'validacao-final') gerarValidacaoFinal();
 }
+
 function abrirPainel(nome){
   document.getElementById('panel-'+nome).classList.add('show');
   document.getElementById('overlay-'+nome).classList.add('show');
   if(nome === 'codigos') renderCodigos();
   if(nome === 'erros') renderErros();
 }
+
+function fecharPainel(nome){
+  document.getElementById('panel-'+nome).classList.remove('show');
+  document.getElementById('overlay-'+nome).classList.remove('show');
+}
+
 function baixarCodigosExcel() {
   if (!STORE.codigos || STORE.codigos.length === 0) {
     toast('Não há códigos cadastrados para exportar.', 'warning');
@@ -784,10 +785,16 @@ function baixarCodigosExcel() {
   baixarExcel([{ nome: "Codigos Clientes", data: dadosParaExportar }], "codigos_clientes.xlsx");
   toast('Arquivo de códigos baixado com sucesso!', 'success');
 }
-function fecharPainel(nome){
-  document.getElementById('panel-'+nome).classList.remove('show');
-  document.getElementById('overlay-'+nome).classList.remove('show');
+
+function confirmarLimparCodigos() {
+  abrirModal('Excluir Códigos', 'Tem certeza que deseja apagar todos os códigos de clientes cadastrados?', '🗑️', () => {
+    STORE.codigos = [];
+    salvarCodigos();
+    renderCodigos();
+    toast('Códigos limpos com sucesso!', 'success');
+  });
 }
+
 function atualizarOpcoesLadoPorRua() {
   const selRua = document.getElementById('alocRua');
   const selLado = document.getElementById('alocLado');
@@ -799,14 +806,17 @@ function atualizarOpcoesLadoPorRua() {
     selLado.innerHTML = '<option value="">Todos</option><option value="PAR">PAR</option><option value="IMPAR">ÍMPAR</option>';
   }
 }
+
 function atualizarProcessosSubsequentes() {
-    gerarEntrada();
-    gerarSaida();
-    gerarConcatenar();
-    gerarPalletEndereco();
-    gerarValidacaoFinal();
+  if (STORE.armazem && STORE.armazem.length > 0 && STORE.ics && STORE.ics.length > 0) {
+    executarAlocacaoSilenciosa();
   }
-  
+  gerarSaida();
+  gerarConcatenar();
+  gerarPalletEndereco();
+  gerarValidacaoFinal();
+}
+
 function carregarCodigos(){
   try{
     STORE.codigos = JSON.parse(localStorage.getItem(LS_KEY)) || [];
@@ -815,14 +825,17 @@ function carregarCodigos(){
   }
   atualizarBadgeCodigos();
 }
+
 function salvarCodigos(){
   localStorage.setItem(LS_KEY, JSON.stringify(STORE.codigos));
   atualizarBadgeCodigos();
 }
+
 function atualizarBadgeCodigos(){
   const badge = document.getElementById('badgeCodigos');
   if(badge) badge.textContent = STORE.codigos.length;
 }
+
 function adicionarCodigo(){
   const c = norm(document.getElementById('novoCodigo').value);
   const n = String(document.getElementById('novoNome').value).trim();
@@ -835,12 +848,14 @@ function adicionarCodigo(){
   document.getElementById('novoNome').value = '';
   toast('Código adicionado e processo atualizado!','success');
 }
+
 function removerCodigo(i){
   STORE.codigos.splice(i, 1); 
   salvarCodigos(); 
   renderCodigos(); 
   toast('Código removido','info');
 }
+
 function confirmarLimparErros(){
   STORE.erros = []; 
   salvarErros();
@@ -867,6 +882,7 @@ function importarCodigos(input){
     input.value = '';
   });
 }
+
 function reprocessarAposAtualizarCodigos() {
   if (STORE.erros && STORE.erros.length > 0) {
     STORE.erros = STORE.erros.filter(e => {
@@ -969,6 +985,21 @@ function processarIcsIndependenteSilencioso(jsonIcs) {
   }
 }
 
+function executarAlocacao() {
+  if (!STORE.armazem.length) {
+    toast('Importe o armazém antes de executar a alocação.', 'warning');
+    return;
+  }
+  if (!STORE.ics.length) {
+    toast('Importe o arquivo ICS antes de executar a alocação.', 'warning');
+    return;
+  }
+  executarAlocacaoSilenciosa();
+  renderAlocacao();
+  atualizarProcessosSubsequentes();
+  toast('Alocação automática executada com sucesso!', 'success');
+}
+
 function executarAlocacaoSilenciosa() {
   const rua = document.getElementById('alocRua') ? document.getElementById('alocRua').value : '01';
   let posicoes = STORE.armazem.filter(a => a.rua === rua);
@@ -1030,6 +1061,7 @@ function renderCodigos(){
     return `<tr><td><strong>${c.codigo}</strong></td><td>${c.nome}</td><td><button class="btn red sm" onclick="removerCodigo(${i})">🗑️</button></td></tr>`;
   }).join('');
 }
+
 function carregarErros(){ STORE.erros = []; atualizarBadgeErros(); renderErros(); }
 function salvarErros(){ atualizarBadgeErros(); }
 
@@ -1042,6 +1074,7 @@ function atualizarBadgeErros(){
     else btnHeader.classList.remove('btn-piscando');
   }
 }
+
 function registrarErro(categoria, mensagem, pallet, lote='', awb='', produto=''){
   categoria = String(categoria || 'GERAL').trim();
   mensagem = String(mensagem || '').trim();
@@ -1060,7 +1093,6 @@ function renderErros(){
   const selCat = document.getElementById('filtroCatErros');
   const catAtual = selCat ? selCat.value : '';
   
-  // Lista fixa com todas as categorias do sistema para garantir que apareçam sempre
   const categoriasPadrao = [
     'LOTE DUPLICADO', 
     'LOTE NAO LOCALIZADO NO ICS', 
@@ -1069,7 +1101,6 @@ function renderErros(){
   ];
   
   if(selCat){
-    // Mantém a seleção atual se o usuário já tiver escolhido uma categoria
     selCat.innerHTML = '<option value="">Todas as categorias</option>' + 
       categoriasPadrao.map(c => `<option value="${c}" ${c === catAtual ? 'selected' : ''}>${c}</option>`).join('');
   }
@@ -1138,7 +1169,6 @@ function baixarErrosExcel() {
   const busca = buscaEl ? norm(buscaEl.value) : '';
   const selCat = document.getElementById('filtroCatErros');
   const catAtual = selCat ? selCat.value : '';
-  const categoriasPadrao = ['LOTE DUPLICADO', 'LOTE NAO LOCALIZADO NO ICS', 'DEVOLVER, CADASTRAR NO SENIOR', 'FORMATAÇÃO'];
   
   let filtrados = catAtual ? STORE.erros.filter(e => e.categoria === catAtual) : STORE.erros;
   if(busca) {
@@ -1431,91 +1461,53 @@ function importarEstoquePosSubida(input) {
   });
 }
 
-function atualizarProcessosSubsequentes() {
-  if (STORE.armazem && STORE.armazem.length > 0 && STORE.ics && STORE.ics.length > 0) {
-    executarAlocacaoSilenciosa();
-  } else {
-    gerarEntrada();
-    gerarSaida();
-    gerarConcatenar();
-    gerarPalletEndereco();
-    gerarValidacaoFinal();
-  }
-
 function renderAlocacao(){
-  const selPallet = document.getElementById('filtroPalletAloc');
-  if(!selPallet) return;
-  const atual = selPallet.value;
-  const pallets = [...new Set(STORE.alocacao.map(r => r.pallet).filter(Boolean))].sort();
-  selPallet.innerHTML = '<option value="">Todos</option>' + pallets.map(p => `<option value="${p}">${p}</option>`).join('');
-  selPallet.value = pallets.includes(atual) ? atual : '';
-  const palletSel = selPallet.value;
-  const tbody = document.getElementById('tbodyAlocacao');
-  let filtrados = STORE.alocacao.filter(r => !palletSel || norm(r.pallet) === norm(palletSel));
-  filtrados.sort((a, b) => norm(a.pallet).localeCompare(norm(b.pallet)));
-  const cnt = document.getElementById('cntAlocacao');
-  if(cnt) cnt.textContent = filtrados.length + ' registros';
-  if(!tbody) return;
-  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="5">Nenhuma alocação executada.</td></tr>'; return; }
-  tbody.innerHTML = filtrados.map(r => `
-    <tr>
-      <td>${r.produto}</td>
-      <td>${r.awb}</td>
-      <td><strong>${r.lote}</strong></td>
-      <td><strong style="color: var(--primary);">${r.pallet}</strong></td>
-      <td><span class="${r.endereco === 'SEM POSIÇÃO DISPONÍVEL' ? 'badge red' : ''}">${r.endereco}</span></td>
-    </tr>
-  `).join('');
-}
-  
-function renderAlocacao(){
-  const selPallet = document.getElementById('filtroPalletAloc');
-  const selRua = document.getElementById('alocRua');
-  const selLado = document.getElementById('alocLado');
-  
-  if(!selPallet) return;
-  
-  const atual = selPallet.value;
-  const pallets = [...new Set(STORE.alocacao.map(r => r.pallet).filter(Boolean))].sort();
-  selPallet.innerHTML = '<option value="">Todos</option>' + pallets.map(p => `<option value="${p}">${p}</option>`).join('');
-  selPallet.value = pallets.includes(atual) ? atual : '';
-  const palletSel = selPallet.value;
-  
-  const ruaSel = selRua ? selRua.value : '';
-  const ladoSel = selLado ? selLado.value : '';
-  
-  const tbody = document.getElementById('tbodyAlocacao');
-  
-  // Filtra com base no pallet, rua e lado selecionados visualmente
-  let filtrados = STORE.alocacao.filter(r => {
-    let matchPallet = !palletSel || norm(r.pallet) === norm(palletSel);
-    
-    // Se houver endereço alocado, podemos filtrar por rua e lado se necessário
-    let matchRua = true;
-    let matchLado = true;
-    
-    if (r.endereco && r.endereco !== 'SEM POSIÇÃO DISPONÍVEL') {
-      const ruaEnd = r.endereco.substring(2, 4);
-      const prefixoNum = parseInt(r.endereco.substring(9, 11), 10);
-      const ladoEnd = (prefixoNum % 2 === 0) ? 'PAR' : 'IMPAR';
-      
-      if (ruaSel && ruaEnd !== ruaSel) matchRua = false;
-      if (ladoSel && ladoEnd !== ladoSel) matchLado = false;
-    } else if (ruaSel || ladoSel) {
-      // Se não tem posição e há filtro de rua/lado ativo, esconde ou trata
-      // (opcional: manter ou filtrar)
-    }
-
-function renderEntrada(){
-  const buscaEl = document.getElementById('buscaEntrada');
-  const busca = buscaEl ? norm(buscaEl.value) : '';
-  const tbody = document.getElementById('tbodyEntrada');
-  const cnt = document.getElementById('cntEntrada');
-  if(!tbody) return;
-  const filtrados = STORE.entrada.filter(e => !busca || norm(e.Codigo).includes(busca) || norm(e.Endereço).includes(busca));
+  const selPallet = document.getElementById('filtroPalletAloc');
+  const selRua = document.getElementById('alocRua');
+  const selLado = document.getElementById('alocLado');
+  
+  if(!selPallet) return;
+  
+  const atual = selPallet.value;
+  const pallets = [...new Set(STORE.alocacao.map(r => r.pallet).filter(Boolean))].sort();
+  selPallet.innerHTML = '<option value="">Todos</option>' + pallets.map(p => `<option value="${p}">${p}</option>`).join('');
+  selPallet.value = pallets.includes(atual) ? atual : '';
+  const palletSel = selPallet.value;
+  
+  const ruaSel = selRua ? selRua.value : '';
+  const ladoSel = selLado ? selLado.value : '';
+  
+  const tbody = document.getElementById('tbodyAlocacao');
+  
+  let filtrados = STORE.alocacao.filter(r => {
+    let matchPallet = !palletSel || norm(r.pallet) === norm(palletSel);
+    if (!matchPallet) return false;
+    
+    if (r.endereco && r.endereco !== 'SEM POSIÇÃO DISPONÍVEL') {
+      const ruaEnd = r.endereco.substring(2, 4);
+      const prefixoNum = parseInt(r.endereco.substring(9, 11), 10);
+      const ladoEnd = (prefixoNum % 2 === 0) ? 'PAR' : 'IMPAR';
+      
+      if (ruaSel && ruaEnd !== ruaSel) return false;
+      if (ladoSel && ladoEnd !== ladoSel) return false;
+    }
+    return true;
+  });
+  
+  filtrados.sort((a, b) => norm(a.pallet).localeCompare(norm(b.pallet)));
+  const cnt = document.getElementById('cntAlocacao');
   if(cnt) cnt.textContent = filtrados.length + ' registros';
-  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="5">Nenhum registro de entrada.</td></tr>'; return; }
-  tbody.innerHTML = filtrados.map(e => `<tr><td><strong>${e.Codigo}</strong></td><td>${e.Endereço}</td><td>${e.Estoque}</td><td>${e.DataVencimento}</td><td><strong>${e.Awb}</strong></td></tr>`).join('');
+  if(!tbody) return;
+  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="5">Nenhuma alocação encontrada.</td></tr>'; return; }
+  tbody.innerHTML = filtrados.map(r => `
+    <tr>
+      <td>${r.produto}</td>
+      <td>${r.awb}</td>
+      <td><strong>${r.lote}</strong></td>
+      <td><strong style="color: var(--primary);">${r.pallet}</strong></td>
+      <td><span class="${r.endereco === 'SEM POSIÇÃO DISPONÍVEL' ? 'badge red' : ''}">${r.endereco}</span></td>
+    </tr>
+  `).join('');
 }
 
 function gerarSaida(){
@@ -1627,7 +1619,11 @@ function gerarConcatenar(){
         let codigoCliente = '';
         const codObj = STORE.codigos.find(c => norm(c.nome) === norm(item.produto));
         if(codObj) codigoCliente = codObj.codigo;
-        else codigoCliente = item.produto || 'GERAL';
+        else {
+          const estMatch = STORE.estoqueLocal.find(e => norm(e.awb) === awbNorm);
+          if(estMatch && estMatch.produto) codigoCliente = estMatch.produto;
+          else codigoCliente = item.produto || 'GERAL';
+        }
         
         STORE.concatenar.push(formatarLinhaConcatenada({ 
           codigo: codigoCliente, 
@@ -1881,10 +1877,7 @@ function baixarValidacaoFinalExcel(){
 
 function salvarHistorico() {
   try {
-    // Cria um novo arquivo Excel em branco
     const wb = XLSX.utils.book_new();
-
-    // Define os dados de cada aba (se estiver vazio, insere um aviso para a planilha não quebrar)
     const abas = [
       { nome: "Relacao", data: STORE.relacao.length ? STORE.relacao : [{ Status: "Sem dados" }] },
       { nome: "ICS", data: STORE.ics.length ? STORE.ics : [{ Status: "Sem dados" }] },
@@ -1898,16 +1891,13 @@ function salvarHistorico() {
       { nome: "ValidacaoFinal", data: STORE.validacaoFinal.length ? STORE.validacaoFinal : [{ Status: "Sem dados" }] }
     ];
 
-    // Adiciona cada aba ao arquivo Excel
     abas.forEach(a => {
       const ws = XLSX.utils.json_to_sheet(a.data);
       XLSX.utils.book_append_sheet(wb, ws, a.nome);
     });
 
-    // Força o download do arquivo no formato .xlsx
     XLSX.writeFile(wb, "Historico.xlsx");
 
-    // Salva o backup local no navegador
     const estadoGeral = {
       relacao: STORE.relacao,
       ics: STORE.ics,
