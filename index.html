@@ -6,6 +6,7 @@
 <title>Sistema WMS - Gestão de Armazém e Posições</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
+/* --- ESTILOS (Index.css) --- */
 :root {
   --bg: #0b0f19;
   --surface: #131b2e;
@@ -132,7 +133,6 @@ main { flex: 1; overflow: hidden; padding: 20px; display: flex; background: tran
 .toolbar select, .toolbar input[type="search"] { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 12px; font-size: 0.85rem; color: var(--text); outline: none; transition: border-color 0.2s; }
 .toolbar select:focus, .toolbar input[type="search"]:focus { border-color: var(--primary); }
 .toolbar input[type="search"] { width: 240px; }
-.spacer { flex: 1; }
 
 .btn { 
   background: var(--primary); 
@@ -190,6 +190,11 @@ tr:hover td { background: #1a2538; }
   transform: translateX(100%);
   transition: transform 0.3s ease;
   border-left: 1px solid var(--border);
+}
+
+#panel-erros .table-container, #panel-erros .panel-body, .tabela-erros-wrapper {
+  flex: 1;
+  overflow-y: auto !important;
 }
 
 #panel-erros.show, .panel.show { transform: translateX(0) !important; }
@@ -380,7 +385,7 @@ tr:hover td { background: #1a2538; }
         <select id="alocLado" onchange="renderAlocacao()"><option value="">Todos</option><option value="PAR">PAR</option><option value="IMPAR">ÍMPAR</option></select>
         <label>Pallet:</label>
         <select id="filtroPalletAloc" onchange="renderAlocacao()"><option value="">Todos</option></select>
-        <button class="btn" id="btnExecutarAlocacao" onclick="executarAlocacao()">⚡ Executar Alocação</button>
+        <button class="btn" onclick="executarAlocacao()">⚡ Executar Alocação</button>
       </div>
       <div class="table-wrap">
         <table>
@@ -511,7 +516,7 @@ tr:hover td { background: #1a2538; }
 <div class="modal-overlay" id="modalInicio">
   <div class="modal" style="max-width:540px">
     <h3>📥 Importação Inicial</h3>
-    <p>Para começar, importe os arquivos base de <strong>Armazém</strong> e <strong>Estoque Local por Lote</strong> <a href="https://texcoprd.seniorcloud.com.br/siltwms/" target="_blank" rel="noopener noreferrer" style="color: green;">Senior WMS</a> <br></p>
+    <p>Para começar, importe os arquivos base de <strong>Armazém</strong> e <strong>Estoque Local por Lote</strong> <a href="https://texcoprd.seniorcloud.com.br/siltwms/"  target="_blank" rel="noopener noreferrer" style="color: green;">Senior WMS</a> <br></p>
     <br>
     <strong>Filtro do armazém:</strong><br>
     <strong>Estoque:</strong> Não <br>
@@ -579,7 +584,7 @@ tr:hover td { background: #1a2538; }
           </tr>
         </thead>
         <tbody id="tbodyErros">
-          <tr><td colspan="5" class="empty-msg">Nenhum erro registrado.</td></tr>
+          <tr><td colspan="4" class="empty-msg">Nenhum erro registrado.</td></tr>
         </tbody>
       </table>
     </div>
@@ -587,9 +592,9 @@ tr:hover td { background: #1a2538; }
 </aside>
 
 <script>
-// --- SCRIPT WMS INTEGRADO ---
+/* --- SCRIPTS (Index.js) --- */
 document.addEventListener('click', function unlockAudio() {
-  try { const audioTest = new Audio(); audioTest.play().catch(() => {}); } catch (e) {}
+try { const audioTest = new Audio(); audioTest.play().catch(() => {}); } catch (e) {}
 }, { once: true });
 
 const LS_KEY = 'wms_codigos_clientes';
@@ -601,6 +606,18 @@ const STORE = {
 function norm(t){
   if(t === null || t === undefined) return '';
   return String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
+}
+
+function normPuntuacao(t) {
+  if (t === null || t === undefined) return '';
+  return String(t)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .replace(/[\,\-\~\çÇ]/g, '')
+    .replace(/[^A-Z0-9 ]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function normCab(t){
@@ -653,7 +670,7 @@ function toast(msg, tipo='info'){
   if(!c) return;
   const el = document.createElement('div');
   el.className = 'toast '+tipo;
-  el.innerHTML = '<span>'+(icons[tipo]||'ℹ️')+'</span><span>'+msg+'</span>';
+  el.innerHTML = '<span>'+(icons[tipo]||'ℹ')+'</span><span>'+msg+'</span>';
   c.appendChild(el);
   setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300);},3500);
 }
@@ -721,7 +738,7 @@ let modalCallback = null;
 function abrirModal(title, msg, icon, cb){
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalMsg').textContent = msg;
-  document.getElementById('modalIcon').textContent = icon || '⚠️';
+  document.getElementById('modalIcon').textContent = icon || '⚠️️';
   modalCallback = cb;
   document.getElementById('modalConfirm').classList.add('show');
 }
@@ -738,14 +755,6 @@ function fecharModalInicio(){
   }
 }
 
-function atualizarContadorErros() {
-  const badge = document.querySelector('#badgeErros'); 
-  if (badge) {
-    const quantidade = STORE.erros ? STORE.erros.length : 0;
-    badge.textContent = quantidade;
-  }
-}
-
 function mudarAba(nome){
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   const tabEl = document.getElementById('tab-'+nome);
@@ -757,14 +766,12 @@ function mudarAba(nome){
   if(nome === 'pallet-endereco') gerarPalletEndereco();
   if(nome === 'validacao-final') gerarValidacaoFinal();
 }
-
 function abrirPainel(nome){
   document.getElementById('panel-'+nome).classList.add('show');
   document.getElementById('overlay-'+nome).classList.add('show');
   if(nome === 'codigos') renderCodigos();
   if(nome === 'erros') renderErros();
 }
-
 function baixarCodigosExcel() {
   if (!STORE.codigos || STORE.codigos.length === 0) {
     toast('Não há códigos cadastrados para exportar.', 'warning');
@@ -777,12 +784,10 @@ function baixarCodigosExcel() {
   baixarExcel([{ nome: "Codigos Clientes", data: dadosParaExportar }], "codigos_clientes.xlsx");
   toast('Arquivo de códigos baixado com sucesso!', 'success');
 }
-
 function fecharPainel(nome){
   document.getElementById('panel-'+nome).classList.remove('show');
   document.getElementById('overlay-'+nome).classList.remove('show');
 }
-
 function atualizarOpcoesLadoPorRua() {
   const selRua = document.getElementById('alocRua');
   const selLado = document.getElementById('alocLado');
@@ -794,7 +799,6 @@ function atualizarOpcoesLadoPorRua() {
     selLado.innerHTML = '<option value="">Todos</option><option value="PAR">PAR</option><option value="IMPAR">ÍMPAR</option>';
   }
 }
-
 function atualizarProcessosSubsequentes() {
   if (STORE.armazem && STORE.armazem.length > 0 && STORE.ics && STORE.ics.length > 0) {
     executarAlocacaoSilenciosa();
@@ -806,7 +810,6 @@ function atualizarProcessosSubsequentes() {
     gerarValidacaoFinal();
   }
 }
-
 function carregarCodigos(){
   try{
     STORE.codigos = JSON.parse(localStorage.getItem(LS_KEY)) || [];
@@ -815,17 +818,14 @@ function carregarCodigos(){
   }
   atualizarBadgeCodigos();
 }
-
 function salvarCodigos(){
   localStorage.setItem(LS_KEY, JSON.stringify(STORE.codigos));
   atualizarBadgeCodigos();
 }
-
 function atualizarBadgeCodigos(){
   const badge = document.getElementById('badgeCodigos');
   if(badge) badge.textContent = STORE.codigos.length;
 }
-
 function adicionarCodigo(){
   const c = norm(document.getElementById('novoCodigo').value);
   const n = String(document.getElementById('novoNome').value).trim();
@@ -838,21 +838,17 @@ function adicionarCodigo(){
   document.getElementById('novoNome').value = '';
   toast('Código adicionado e processo atualizado!','success');
 }
-
 function removerCodigo(i){
   STORE.codigos.splice(i, 1); 
   salvarCodigos(); 
   renderCodigos(); 
   toast('Código removido','info');
 }
-
-function confirmarLimparCodigos(){
-  abrirModal('Excluir Códigos', 'Tem certeza que deseja apagar todos os códigos de clientes cadastrados?', '🗑️', () => {
-    STORE.codigos = [];
-    salvarCodigos();
-    renderCodigos();
-    toast('Todos os códigos foram excluídos.', 'info');
-  });
+function confirmarLimparErros(){
+  STORE.erros = []; 
+  salvarErros();
+  renderErros();
+  toast('Central de erros limpa com sucesso!', 'success');
 }
 
 function importarCodigos(input){
@@ -871,16 +867,14 @@ function importarCodigos(input){
     renderCodigos(); 
     reprocessarAposAtualizarCodigos();
     toast(count + ' códigos importados e sistema recalculado!','success');
-    tocarSomNotificacao();
     input.value = '';
   });
 }
-
 function reprocessarAposAtualizarCodigos() {
   if (STORE.erros && STORE.erros.length > 0) {
     STORE.erros = STORE.erros.filter(e => {
-      if (e.categoria === 'DEVOLVER, CADASTRAR NO SENIOR') {
-        const codObj = STORE.codigos.find(c => norm(c.nome) === norm(e.produto));
+      if (e.categoria === 'DEVOLVER, CADASTRAR NO SENIOR' || e.categoria === 'FORMATAÇÃO') {
+        const codObj = STORE.codigos.find(c => norm(c.nome) === norm(e.produto) || normPuntuacao(c.nome) === normPuntuacao(e.produto));
         return !codObj;
       }
       return true;
@@ -905,10 +899,6 @@ function reprocessarAposAtualizarCodigos() {
 
 function processarIcsIndependente(jsonIcs) {
   STORE.ics = [];
-  const lotesDuplicadosNaRelacao = new Set(
-    STORE.erros.filter(e => e.categoria === 'LOTE DUPLICADO').map(e => normLote(e.lote))
-  );
-  
   const chavesIcsSet = new Set();
   
   jsonIcs.forEach(linha => {
@@ -924,20 +914,21 @@ function processarIcsIndependente(jsonIcs) {
       if (relMatch) palletIcs = norm(relMatch.pallete || relMatch.pallet);
     }
 
-    if (lotesDuplicadosNaRelacao.has(lote)) {
-      registrarErro('LOTE DUPLICADO', `O lote "${lote}" presente no ICS foi bloqueado por estar duplicado na Relação.`, palletIcs || 'N/A', lote, awb, produto);
-      return;
-    }
-
-    const chaveUnica = `${lote}_${awb}`;
+    const chaveUnica = `${lote}_${awb}_${palletIcs}`;
     if (chavesIcsSet.has(chaveUnica)) {
-      registrarErro('LOTE DUPLICADO', `O lote "${lote}" com o AWB "${awb}" possui ocorrências duplicadas no arquivo ICS.`, palletIcs || 'N/A', lote, awb, produto);
+      registrarErro('LOTE DUPLICADO', `O lote "${lote}" com o AWB "${awb}" e pallet "${palletIcs || 'N/A'}" possui ocorrências duplicadas no arquivo ICS.`, palletIcs || 'N/A', lote, awb, produto);
       return;
     }
     chavesIcsSet.add(chaveUnica);
 
-    const codObj = STORE.codigos.find(c => norm(c.nome) === produto);
+    const codObj = STORE.codigos.find(c => norm(c.nome) === norm(produto));
     if (!codObj || !codObj.codigo) {
+      const codObjFormat = STORE.codigos.find(c => normPuntuacao(c.nome) === normPuntuacao(produto));
+      if (codObjFormat && codObjFormat.codigo) {
+        registrarErro('FORMATAÇÃO', `O produto/nome fantasia "${produto}" possui diferença de formatação em relação ao cadastro "${codObjFormat.nome}".`, palletIcs || 'N/A', lote, awb, produto);
+        return;
+      }
+
       registrarErro('DEVOLVER, CADASTRAR NO SENIOR', `O produto/nome fantasia "${produto || 'VAZIO'}" não foi encontrado na base de Códigos Clientes.`, palletIcs || 'N/A', lote, awb, produto);
       return; 
     }
@@ -1042,7 +1033,6 @@ function renderCodigos(){
     return `<tr><td><strong>${c.codigo}</strong></td><td>${c.nome}</td><td><button class="btn red sm" onclick="removerCodigo(${i})">🗑️</button></td></tr>`;
   }).join('');
 }
-
 function carregarErros(){ STORE.erros = []; atualizarBadgeErros(); renderErros(); }
 function salvarErros(){ atualizarBadgeErros(); }
 
@@ -1055,7 +1045,6 @@ function atualizarBadgeErros(){
     else btnHeader.classList.remove('btn-piscando');
   }
 }
-
 function registrarErro(categoria, mensagem, pallet, lote='', awb='', produto=''){
   categoria = String(categoria || 'GERAL').trim();
   mensagem = String(mensagem || '').trim();
@@ -1073,7 +1062,7 @@ function renderErros(){
   const busca = buscaEl ? norm(buscaEl.value) : '';
   const selCat = document.getElementById('filtroCatErros');
   const catAtual = selCat ? selCat.value : '';
-  const categoriasPadrao = ['LOTE DUPLICADO', 'LOTE NAO LOCALIZADO NO ICS', 'DEVOLVER, CADASTRAR NO SENIOR'];
+  const categoriasPadrao = ['LOTE DUPLICADO', 'LOTE NAO LOCALIZADO NO ICS', 'DEVOLVER, CADASTRAR NO SENIOR', 'FORMATAÇÃO'];
   
   if(selCat){
     selCat.innerHTML = '<option value="">Todas as categorias</option>' + categoriasPadrao.map(c => `<option>${c}</option>`).join('');
@@ -1117,6 +1106,8 @@ function renderErros(){
     let erroTexto = e.mensagem || e.categoria || '—';
     if (erroTexto.includes('não foi encontrado na base de Códigos Clientes')) {
       erroTexto = 'Devolver';
+    } else if (e.categoria === 'FORMATAÇÃO' || erroTexto.includes('formatação')) {
+      erroTexto = 'Formatação';
     } else if (e.categoria === 'LOTE NAO LOCALIZADO NO ICS' || erroTexto.includes('ICS')) {
       erroTexto = 'Não localizado no ICS';
     } else if (e.categoria === 'LOTE DUPLICADO' || erroTexto.includes('duplicado')) {
@@ -1142,6 +1133,7 @@ function baixarErrosExcel() {
   const busca = buscaEl ? norm(buscaEl.value) : '';
   const selCat = document.getElementById('filtroCatErros');
   const catAtual = selCat ? selCat.value : '';
+  const categoriasPadrao = ['LOTE DUPLICADO', 'LOTE NAO LOCALIZADO NO ICS', 'DEVOLVER, CADASTRAR NO SENIOR', 'FORMATAÇÃO'];
   
   let filtrados = catAtual ? STORE.erros.filter(e => e.categoria === catAtual) : STORE.erros;
   if(busca) {
@@ -1171,12 +1163,14 @@ function baixarErrosExcel() {
 
 function compararRelacaoComICS() {
   if (!STORE.ics || STORE.ics.length === 0 || !STORE.relacao || STORE.relacao.length === 0) return;
+  
   const lotesIcsSet = new Set(STORE.ics.map(item => normLote(item.lote)));
   const lotesComErroDevolver = new Set(
-    STORE.erros.filter(e => e.categoria === 'DEVOLVER, CADASTRAR NO SENIOR').map(e => normLote(e.lote))
+    STORE.erros.filter(e => e.categoria === 'DEVOLVER, CADASTRAR NO SENIOR' || e.categoria === 'FORMATAÇÃO').map(e => normLote(e.lote))
   );
 
   const relacaoValida = [];
+  
   STORE.relacao.forEach(item => {
     const loteNorm = normLote(item.lote);
     if (lotesIcsSet.has(loteNorm)) {
@@ -1187,11 +1181,14 @@ function compararRelacaoComICS() {
           'LOTE NAO LOCALIZADO NO ICS',
           `O lote "${item.lote}" consta na Relação, mas não foi localizado no arquivo ICS.`,
           item.pallet || item.pallete || 'N/A',
-          item.lote, '', ''
+          item.lote,
+          '',
+          ''
         );
       }
     }
   });
+  
   STORE.relacao = relacaoValida;
   sincronizarRelacaoWithIcs();
 }
@@ -1212,36 +1209,69 @@ function importarRelacao(input){
   if(!input.files.length) return;
   lerArquivo(input.files[0], jsonRelacao => {
     processarRelacaoIndependente(jsonRelacao);
-    tocarSomNotificacao();
     input.value = '';
   });
 }
 
 function processarRelacaoIndependente(jsonRelacao) {
-  const chavesVistas = new Set();
   STORE.relacao = [];
+  const mapaLotes = {};
+  jsonRelacao.forEach(linha => {
+    const lote = normLote(val(linha, ['LOTE', 'LOTE / MASTER', 'LOTE/MASTER', 'MASTER']));
+    const pallet = norm(val(linha, ['PALLET', 'PALLETE', 'PALETE', 'Nº PALLET'])) || 'N/A';
+    if (!lote) return;
+
+    if (!mapaLotes[lote]) {
+      mapaLotes[lote] = new Set();
+    }
+    mapaLotes[lote].add(pallet);
+  });
+
+  const chavesVistas = new Set();
+  const lotesDuplicadosRegistrados = new Set();
 
   jsonRelacao.forEach(linha => {
     const lote = normLote(val(linha, ['LOTE', 'LOTE / MASTER', 'LOTE/MASTER', 'MASTER']));
-    const pallet = norm(val(linha, ['PALLET', 'PALLETE', 'PALETE', 'Nº PALLET']));
-    if(!lote) return;
+    const pallet = norm(val(linha, ['PALLET', 'PALLETE', 'PALETE', 'Nº PALLET'])) || 'N/A';
+    const obs = val(linha, ['OBSERVAÇÕES', 'OBSERVACAO', 'OBS', 'OBSERVACOES', 'OBSERVAÇÃO']);
+    if (!lote) return;
 
     const status = val(linha, ['STATUS', 'ALTURA', 'HEIGHT']);
     const {num, cat} = parseAltura(status);
     const alturaFormatada = num === null ? norm(status) : num;
-    const chaveUnica = `${lote}_${pallet}`;
 
-    if (chavesVistas.has(chaveUnica)) return; 
+    if (mapaLotes[lote].size > 1) {
+      if (!lotesDuplicadosRegistrados.has(lote)) {
+        lotesDuplicadosRegistrados.add(lote);
+        const listaPallets = Array.from(mapaLotes[lote]).join(', ');
+        registrarErro(
+          'LOTE DUPLICADO', 
+          `O lote "${lote}" está duplicado nos pallets: [${listaPallets}] e foi retirado do processo.`, 
+          listaPallets, 
+          lote, 
+          '', 
+          ''
+        );
+      }
+      return;
+    }
+
+    const chaveUnica = `${lote}_${pallet}`;
+    if (chavesVistas.has(chaveUnica)) {
+      return; 
+    }
     chavesVistas.add(chaveUnica);
-    STORE.relacao.push({lote, pallet, altura: alturaFormatada, categoria: cat, obs: ''});
+
+    STORE.relacao.push({lote, pallet, altura: alturaFormatada, categoria: cat, obs: String(obs || '').trim()});
   });
   
   if(STORE.ics.length > 0) compararRelacaoComICS();
+  
   atualizarProcessosSubsequentes();
   renderRelacao(); 
   renderIcs(); 
   renderErros();
-  toast('Relação validada e limpa com sucesso!', 'success');
+  toast('Relação validada com sucesso!', 'success');
 }
 
 function renderRelacao(){
@@ -1274,7 +1304,6 @@ function importarIcs(input){
   if(!input.files.length) return;
   lerArquivo(input.files[0], jsonIcs => {
     processarIcsIndependente(jsonIcs);
-    tocarSomNotificacao();
     input.value = '';
   });
 }
@@ -1333,8 +1362,7 @@ function importarArmazem(input){
     });
     const statusArmazem = document.getElementById('statusArmazem');
     if(statusArmazem) statusArmazem.textContent = STORE.armazem.length + ' posições vazias e ativas importadas.';
-    toast('Armazém importado: ' + STORE.armazem.length + ' posições','success');
-    tocarSomNotificacao();
+    toast('Armazém importado com sucesso','success');
     input.value = '';
   });
 }
@@ -1379,7 +1407,6 @@ function importarEstoqueLocalInicial(input) {
     const statusEl = document.getElementById('statusEstoqueLocalIni');
     if(statusEl) statusEl.textContent = STORE.estoqueLocal.length + ' registros carregados.';
     toast('Estoque Local inicial carregado com sucesso!', 'success');
-    tocarSomNotificacao();
     input.value = '';
   });
 }
@@ -1394,8 +1421,7 @@ function importarEstoquePosSubida(input) {
     }
     processarDadosEstoqueLocal(json);
     gerarValidacaoFinal();
-    toast('Estoque atualizado e Validação Final recalculada com sucesso!', 'success');
-    tocarSomNotificacao();
+    toast('Estoque atualizado com sucesso!', 'success');
     input.value = '';
   });
 }
@@ -1451,12 +1477,10 @@ function executarAlocacao(){
         });
       });
       renderAlocacao(); gerarEntrada(); gerarPalletEndereco(); gerarValidacaoFinal();
-      tocarSomNotificacao();
-      toast('Alocação concluída utilizando o lado oposto!', 'success');
+      toast('Alocação concluída!', 'success');
     });
   } else {
     renderAlocacao(); gerarEntrada(); gerarPalletEndereco(); gerarValidacaoFinal();
-    tocarSomNotificacao();
     toast('Alocação executada com sucesso!', 'success');
   }
 }
@@ -1569,6 +1593,7 @@ function gerarSaida(){
   });
 
   const enderecosAcumulo = ['DEV01010001']; 
+
   STORE.estoqueLocal.forEach(est => {
     let localNorm = norm(est.local);
     if (enderecosAcumulo.includes(localNorm)) {
@@ -1598,6 +1623,7 @@ function gerarSaida(){
       }
     }
   });
+
   renderSaida();
 }
 
@@ -1607,7 +1633,6 @@ function renderSaida(){
   const tbody = document.getElementById('tbodySaida');
   const cnt = document.getElementById('cntSaida');
   if(!tbody) return;
-  
   const filtrados = STORE.saida.filter(s => !busca || norm(s.Codigo).includes(busca) || norm(s.Awb).includes(busca) || norm(s.Endereço).includes(busca));
   if(cnt) cnt.textContent = filtrados.length + ' registros';
   if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="5">Nenhum registro de saída localizado.</td></tr>'; return; }
@@ -1661,6 +1686,7 @@ function gerarConcatenar(){
       }));
     }
   });
+  
   renderConcatenar();
 }
 
@@ -1709,7 +1735,7 @@ function baixarAmbosSaida() {
     const enderecosUnicos = [...new Set(itensEstoqueZero.map(i => i.endereco || i.Endereco))].filter(Boolean);
     const conteudoLocais = enderecosUnicos.join('\r\n');
     dispararDownloadFicheiro(conteudoLocais, 'LOCAIS.TXT');
-    toast(`Sucesso! ${itensEstoqueZero.length} registos de estoque 0 descarregados.`, 'success');
+    toast(`Sucesso! ${itensEstoqueZero.length} registos descarregados.`, 'success');
   }, 300);
 }
 
@@ -1779,238 +1805,143 @@ function renderPalletEndereco(){
   const buscaEl = document.getElementById('buscaPalletEndereco');
   const busca = buscaEl ? norm(buscaEl.value) : '';
   const tbody = document.getElementById('tbodyPalletEndereco');
+  const cnt = document.getElementById('cntPalletEndereco');
   if(!tbody) return;
   const filtrados = STORE.palletEndereco.filter(item => !busca || norm(item.pallet).includes(busca) || norm(item.endereco).includes(busca));
-  const cnt = document.getElementById('cntPalletEndereco');
   if(cnt) cnt.textContent = filtrados.length + ' registros';
-  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="2">Nenhum dado encontrado.</td></tr>'; return; }
+  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="2">Nenhum registro encontrado.</td></tr>'; return; }
   tbody.innerHTML = filtrados.map(item => `<tr><td><strong>${item.pallet}</strong></td><td>${item.endereco}</td></tr>`).join('');
 }
 
-function copiarTabelaOutlook() {
+function copiarTabelaOutlook(){
   if(!STORE.palletEndereco.length) gerarPalletEndereco();
-  if(!STORE.palletEndereco.length){ toast('Não há dados para copiar.', 'warning'); return; }
-  let htmlTable = `<table border="1" cellspacing="0" cellpadding="5" style="border-collapse:collapse;font-family:Arial;font-size:11pt;"><tr style="background:#f2f2f2;"><th>PALLET</th><th>ENDEREÇO</th></tr>`;
-  STORE.palletEndereco.forEach(i => htmlTable += `<tr><td>${i.pallet}</td><td>${i.endereco}</td></tr>`);
-  htmlTable += `</table>`;
-  navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([htmlTable], { type: 'text/html' }), 'text/plain': new Blob([STORE.palletEndereco.map(i => `${i.pallet}\t${i.endereco}`).join('\n')], { type: 'text/plain' }) })]).then(() => {
-    toast('Tabela copiada com sucesso para o Outlook!', 'success');
-  }).catch(err => toast('Erro ao copiar', 'error'));
+  if(!STORE.palletEndereco.length){ toast('Nenhum dado para copiar.', 'warning'); return; }
+  const linhas = STORE.palletEndereco.map(item => `${item.pallet}\t${item.endereco}`).join('\n');
+  const cabecalho = 'PALLET\tENDEREÇO\n';
+  const textoCompleto = cabecalho + linhas;
+  navigator.clipboard.writeText(textoCompleto).then(() => {
+    toast('Copiado! Agora basta colar diretamente no Outlook.', 'success');
+  }).catch(() => {
+    toast('Erro ao copiar para a área de transferência.', 'error');
+  });
 }
 
-function gerarValidacaoFinal() {
+function gerarValidacaoFinal(){
   STORE.validacaoFinal = [];
-  if (!STORE.alocacao || STORE.alocacao.length === 0) {
-    renderValidacaoFinal();
-    return;
-  }
   const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
   
-  STORE.alocacao.forEach(itemAloc => {
-    if (!itemAloc || !itemAloc.awb || itemAloc.endereco === 'SEM POSIÇÃO DISPONÍVEL') return;
-    if (lotesComErro.has(normLote(itemAloc.lote))) return;
+  STORE.alocacao.forEach(item => {
+    if(lotesComErro.has(normLote(item.lote))) return;
+    if(!item.awb) return;
     
-    const awbProcurado = norm(itemAloc.awb);
-    const itemEstoque = STORE.estoqueLocal.find(e => norm(e.awb) === awbProcurado);
-    const enderecoSenior = itemEstoque ? itemEstoque.local : '—';
-    let statusValidacao = 'Fora do Senior';
-
-    if (itemEstoque) {
-      if (norm(itemEstoque.local) === norm(itemAloc.endereco)) {
-        statusValidacao = 'No senior';
+    let endPlanejado = item.endereco || '—';
+    let itensEstoque = STORE.estoqueLocal.filter(e => norm(e.awb) === norm(item.awb));
+    let endSenior = 'NÃO ENCONTRADO NO SENIOR';
+    let status = 'NAO_SUBIU';
+    
+    if(itensEstoque.length > 0) {
+      endSenior = itensEstoque[0].local || '—';
+      if(norm(endSenior) === norm(endPlanejado)) {
+        status = 'SUBIU';
       } else {
-        statusValidacao = 'Divergência de Endereço no Senior';
+        status = 'DIVERGENTE';
       }
     }
 
     STORE.validacaoFinal.push({
-      awb: itemAloc.awb,
-      lote: itemAloc.lote || '—',
-      enderecoPlanejado: itemAloc.endereco,
-      enderecoSenior: enderecoSenior,
-      status: statusValidacao
+      awb: item.awb,
+      lote: item.lote,
+      enderecoPlanejado: endPlanejado,
+      enderecoSenior: endSenior,
+      status: status
     });
   });
   renderValidacaoFinal();
 }
 
-function renderValidacaoFinal() {
+function renderValidacaoFinal(){
   const buscaEl = document.getElementById('buscaValidacaoFinal');
   const busca = buscaEl ? norm(buscaEl.value) : '';
   const selStatus = document.getElementById('filtroStatusValidacao');
   const statusFiltro = selStatus ? selStatus.value : '';
-  const tbody = document.getElementById('tbodyValidacaoFinal');
-  const cnt = document.getElementById('cntValidacaoFinal');
-  if(!tbody) return;
   
-  let filtrados = STORE.validacaoFinal.filter(v =>
-    !busca || norm(v.awb).includes(busca) || norm(v.lote).includes(busca) || norm(v.status).includes(busca)
-  );
-  
-  if (statusFiltro === 'NAO_SUBIU') {
-    filtrados = filtrados.filter(v => {
-      let st = norm(v.status);
-      return st.includes("NAO SUBIU") || st.includes("PENDENTE") || st.includes("ERRO") || st.includes("DIVERGENCIA");
-    });
-  } else if (statusFiltro === 'SUBIU') {
-    filtrados = filtrados.filter(v => {
-      let st = norm(v.status);
-      return !st.includes("NAO SUBIU") && !st.includes("PENDENTE") && !st.includes("ERRO") && !st.includes("DIVERGENCIA");
-    });
+  let filtrados = STORE.validacaoFinal;
+  if(statusFiltro) {
+    filtrados = filtrados.filter(v => v.status === statusFiltro);
+  }
+  if(busca) {
+    filtrados = filtrados.filter(v => norm(v.awb).includes(busca) || norm(v.lote).includes(busca) || norm(v.status).includes(busca));
   }
   
+  const tbody = document.getElementById('tbodyValidacaoFinal');
+  const cnt = document.getElementById('cntValidacaoFinal');
   if(cnt) cnt.textContent = filtrados.length + ' registros';
-  
-  if(!filtrados.length) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Nenhuma validação executada ou registros não encontrados. Certifique-se de ter importado o Estoque Local do Senior e executado a alocação.</td></tr>';
+  if(!tbody) return;
+  if(!filtrados.length){
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Nenhum registro encontrado.</td></tr>';
     return;
   }
   
   tbody.innerHTML = filtrados.map(v => {
-    let textoStatus = v.status || "Validar o arquivo não subiu";
-    let estilocss = '';
-    if (norm(textoStatus).includes("NAO SUBIU") || norm(textoStatus).includes("PENDENTE") || norm(textoStatus).includes("ERRO") || norm(textoStatus).includes("DIVERGENCIA")) {
-      estilocss = 'color: #ff3333; text-shadow: 0 0 8px rgba(255, 51, 51, 0.8), 0 0 15px rgba(255, 51, 51, 0.4); font-weight: 800;';
-    } else {
-      estilocss = 'color: #00ff66; text-shadow: 0 0 8px rgba(0, 255, 102, 0.8), 0 0 15px rgba(0, 255, 102, 0.4); font-weight: 800;';
-    }
+    let corBadge = 'var(--muted)';
+    let textoStatus = v.status;
+    if(v.status === 'SUBIU') { corBadge = 'var(--success)'; textoStatus = 'No Senior (OK)'; }
+    else if(v.status === 'NAO_SUBIU') { corBadge = 'var(--danger)'; textoStatus = 'Fora do Senior'; }
+    else if(v.status === 'DIVERGENTE') { corBadge = 'var(--warning)'; textoStatus = 'Endereço Divergente'; }
 
     return `<tr>
       <td><strong>${v.awb}</strong></td>
       <td>${v.lote}</td>
       <td>${v.enderecoPlanejado}</td>
-      <td><strong>${v.enderecoSenior}</strong></td>
-      <td><span style="${estilocss}">${textoStatus}</span></td>
+      <td>${v.enderecoSenior}</td>
+      <td><span style="color: ${corBadge}; font-weight: 700;">${textoStatus}</span></td>
     </tr>`;
   }).join('');
 }
 
-function baixarValidacaoFinalExcel() {
-  if(!STORE.validacaoFinal.length) {
-    toast('Nenhum dado de validação para baixar.', 'warning');
-    return;
-  }
+function baixarValidacaoFinalExcel(){
+  if(!STORE.validacaoFinal.length){ toast('Nenhum dado de validação para baixar.', 'warning'); return; }
   const dados = STORE.validacaoFinal.map(v => ({
     "AWB": v.awb,
     "LOTE": v.lote,
     "ENDEREÇO PLANEJADO": v.enderecoPlanejado,
     "ENDEREÇO NO SENIOR": v.enderecoSenior,
-    "STATUS DA VALIDAÇÃO": v.status
+    "STATUS": v.status
   }));
-  baixarExcel([{ nome: "Validacao Final", data: dados }], "relatorio_validacao_final.xlsx");
-  toast('Relatório de Validação Final baixado com sucesso!', 'success');
+  baixarExcel([{nome: "Validacao Final", data: dados}], "relatorio_validacao_final.xlsx");
+  toast('Relatório baixado com sucesso!', 'success');
 }
 
-function salvarHistorico() {
-  const abasParaExcel = [
-    { nome: "Relacao", data: STORE.relacao.length ? STORE.relacao : [{ Status: "Sem dados" }] },
-    { nome: "ICS", data: STORE.ics.length ? STORE.ics : [{ Status: "Sem dados" }] },
-    { nome: "Armazem", data: STORE.armazem.length ? STORE.armazem : [{ Status: "Sem dados" }] },
-    { nome: "Alocacao", data: STORE.alocacao.length ? STORE.alocacao : [{ Status: "Sem dados" }] },
-    { nome: "Entrada", data: STORE.entrada.length ? STORE.entrada : [{ Status: "Sem dados" }] },
-    { nome: "EstoqueLocal", data: STORE.estoqueLocal.length ? STORE.estoqueLocal : [{ Status: "Sem dados" }] },
-    { nome: "Saida", data: STORE.saida.length ? STORE.saida : [{ Status: "Sem dados" }] },
-    { nome: "CodigosClientes", data: STORE.codigos.length ? STORE.codigos : [{ Status: "Sem dados" }] },
-    { nome: "Erros", data: STORE.erros.length ? STORE.erros : [{ Status: "Sem dados" }] },
-    { nome: "ValidacaoFinal", data: STORE.validacaoFinal.length ? STORE.validacaoFinal : [{ Status: "Sem dados" }] }
-  ];
-  baixarExcel(abasParaExcel, "historico_wms_completo.xlsx");
-  
-  const estadoGeral = {
+function salvarHistorico(){
+  const dadosHistorico = {
     relacao: STORE.relacao,
     ics: STORE.ics,
-    armazem: STORE.armazem,
     alocacao: STORE.alocacao,
-    entrada: STORE.entrada,
-    estoqueLocal: STORE.estoqueLocal,
-    saida: STORE.saida,
-    concatenar: STORE.concatenar,
-    codigos: STORE.codigos,
     erros: STORE.erros,
-    palletEndereco: STORE.palletEndereco,
-    validacaoFinal: STORE.validacaoFinal
+    codigos: STORE.codigos
   };
-  localStorage.setItem('wms_backup_geral', JSON.stringify(estadoGeral));
-  toast('Histórico salvo e arquivo Excel baixado com sucesso!', 'success');
+  const jsonStr = JSON.stringify(dadosHistorico, null, 2);
+  const blob = new Blob([jsonStr], {type: 'application/json;charset=utf-8'});
+  const hoje = new Date();
+  const nomeArquivo = `historico_wms_${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}.json`;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = nomeArquivo;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast('Histórico salvo com sucesso!', 'success');
 }
 
-function confirmarZerar() {
-  abrirModal('Zerar Sistema', 'Tem certeza que deseja apagar todos os dados e reiniciar o sistema?', '🗑️', () => {
-    localStorage.removeItem('wms_backup_geral');
-    Object.keys(STORE).forEach(k => STORE[k] = []);
-    carregarCodigos();
-    renderRelacao();
-    renderIcs();
-    renderAlocacao();
-    renderEntrada();
-    renderSaida();
-    renderConcatenar();
-    renderPalletEndereco();
-    renderCodigos();
-    renderErros();
-    renderValidacaoFinal();
-    toast('Sistema zerado com sucesso.', 'info');
+function confirmarZerar(){
+  abrirModal('Reiniciar Sistema', 'Tem certeza que deseja apagar todos os dados da sessão?', '🗑️', () => {
+    localStorage.removeItem(LS_KEY);
+    location.reload();
   });
 }
 
-function tocarSomNotificacao() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-    gain.gain.setValueAtTime(0.1, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.8);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.3);
-  } catch(e) {}
-}
-
-document.addEventListener('DOMContentLoaded', () => {
+window.onload = function() {
   carregarCodigos();
   carregarErros();
-  try {
-    const backup = localStorage.getItem('wms_backup_geral');
-    if(backup) {
-      const dados = JSON.parse(backup);
-      Object.keys(dados).forEach(k => {
-        if(STORE[k] !== undefined) STORE[k] = dados[k];
-      });
-      renderRelacao();
-      renderIcs();
-      renderAlocacao();
-      renderEntrada();
-      renderSaida();
-      renderConcatenar();
-      renderPalletEndereco();
-      renderCodigos();
-      renderErros();
-      renderValidacaoFinal();
-    }
-  } catch(e) {}
-
-  if(!STORE.armazem.length || !STORE.estoqueLocal.length) {
-    abrirModalInicio();
-  }
-
-  const selRuaAloc = document.getElementById('alocRua');
-  if (selRuaAloc) {
-    selRuaAloc.addEventListener('change', () => {
-      atualizarOpcoesLadoPorRua();
-      renderAlocacao();
-    });
-  }
-
-  const selPalletAloc = document.getElementById('filtroPalletAloc');
-  if (selPalletAloc) {
-    selPalletAloc.addEventListener('change', () => {
-      renderAlocacao();
-    });
-  }
-});
+  abrirModalInicio();
+};
 </script>
 </body>
 </html>
