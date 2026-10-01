@@ -1432,17 +1432,19 @@ function importarEstoquePosSubida(input) {
   });
 }
 
+function atualizarProcessosSubsequentes() {
+  gerarEntrada();
+  gerarSaida();
+  gerarConcatenar();
+  gerarPalletEndereco();
+  gerarValidacaoFinal();
+}
+
 function executarAlocacao(){
-  if(!STORE.armazem || STORE.armazem.length === 0){ 
-    toast('Importe o Armazém antes de alocar','warning'); 
-    abrirModalInicio(); 
-    return; 
-  }
-  
+  if(!STORE.armazem.length){ toast('Importe o Armazém antes de alocar','warning'); abrirModalInicio(); return; }
   const rua = document.getElementById('alocRua').value;
   let ladoSel = document.getElementById('alocLado').value;
   if(rua === '02' && ladoSel === 'PAR') ladoSel = '';
-  
   let posicoes = STORE.armazem.filter(a => a.rua === rua);
   if(ladoSel) posicoes = posicoes.filter(a => a.lado === ladoSel);
   
@@ -1488,28 +1490,15 @@ function executarAlocacao(){
           STORE.alocacao.push({produto: r.produto, awb: r.awb, lote: r.lote, pallet: r.pallet, categoria: item.cat, endereco: enderecoAlocado});
         });
       });
-      renderAlocacao(); 
-      gerarEntrada(); 
-      gerarPalletEndereco(); 
-      gerarValidacaoFinal();
+      renderAlocacao(); gerarEntrada(); gerarPalletEndereco(); gerarValidacaoFinal();
       tocarSomNotificacao();
       toast('Alocação concluída!', 'success');
     });
   } else {
-    renderAlocacao(); 
-    gerarEntrada(); 
-    gerarPalletEndereco(); 
-    gerarValidacaoFinal();
+    renderAlocacao(); gerarEntrada(); gerarPalletEndereco(); gerarValidacaoFinal();
     tocarSomNotificacao();
     toast('Alocação executada com sucesso!', 'success');
   }
-}
-  function atualizarProcessosSubsequentes() {
-  gerarEntrada();
-  gerarSaida();
-  gerarConcatenar();
-  gerarPalletEndereco();
-  gerarValidacaoFinal();
 }
 function renderAlocacao(){
   const selPallet = document.getElementById('filtroPalletAloc');
