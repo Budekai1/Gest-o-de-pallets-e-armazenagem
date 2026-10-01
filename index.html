@@ -1433,92 +1433,120 @@ function importarEstoquePosSubida(input) {
 }
 
 function executarAlocacao(){
-  if(!STORE.armazem || STORE.armazem.length === 0){ 
-    toast('Importe o Armazém antes de alocar','warning'); 
-    abrirModalInicio(); 
-    return; 
-  }
-  
-  const rua = document.getElementById('alocRua').value;
-  let ladoSel = document.getElementById('alocLado').value;
-  if(rua === '02' && ladoSel === 'PAR') ladoSel = '';
-  
-  let posicoes = STORE.armazem.filter(a => a.rua === rua);
-  if(ladoSel) posicoes = posicoes.filter(a => a.lado === ladoSel);
-  
-  const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
-  const porPallet = {};
-  
-  STORE.ics.forEach(r => {
-    if(lotesComErro.has(normLote(r.lote))) return;
-    let chavePallet = (r.pallet && r.pallet !== 'N/A' && r.pallet !== '—') ? norm(r.pallet) : `AWB_${r.awb}_${r.lote}`;
-    if(!porPallet[chavePallet]) porPallet[chavePallet] = [];
-    porPallet[chavePallet].push(r);
-  });
-  
-  const chavesPallets = Object.keys(porPallet);
-  if(chavesPallets.length === 0) {
-    toast('Nenhum registro válido no ICS para alocar.', 'warning');
-    return;
-  }
-  
-  const usadas = new Set();
-  STORE.alocacao = [];
-  let palletsRestantes = [];
-  
-  chavesPallets.forEach(pallet => {
-    const registros = porPallet[pallet];
-    if(registros.length === 0) return;
-    const cat = registros[0].categoria;
-    let pos = posicoes.find(p => !usadas.has(p.endereco) && p.categoria === cat);
-    if(!pos) pos = posicoes.find(p => !usadas.has(p.endereco));
-    if(pos) {
-      usadas.add(pos.endereco);
-      registros.forEach(r => {
-        STORE.alocacao.push({produto: r.produto, awb: r.awb, lote: r.lote, pallet: r.pallet, categoria: cat, endereco: pos.endereco});
-      });
-    } else {
-      palletsRestantes.push({pallet, registros, cat});
-    }
-  });
-  
-  if(palletsRestantes.length > 0 && ladoSel) {
-    const ladoOposto = ladoSel === 'IMPAR' ? 'PAR' : 'IMPAR';
-    abrirModal('Endereços esgotados', `Deseja alocar o restante no lado ${ladoOposto} da rua ${rua}?`, '⚠️', () => {
-      let posicoesOpostas = STORE.armazem.filter(a => a.rua === rua && a.lado === ladoOposto);
-      palletsRestantes.forEach(item => {
-        let pos = posicoesOpostas.find(p => !usadas.has(p.endereco) && p.categoria === item.cat);
-        if(!pos) pos = posicoesOpostas.find(p => !usadas.has(p.endereco));
-        const enderecoAlocado = pos ? pos.endereco : 'SEM POSIÇÃO DISPONÍVEL';
-        if(pos) usadas.add(pos.endereco);
-        item.registros.forEach(r => {
-          STORE.alocacao.push({produto: r.produto, awb: r.awb, lote: r.lote, pallet: r.pallet, categoria: item.cat, endereco: enderecoAlocado});
-        });
-      });
-      renderAlocacao(); 
-      gerarEntrada(); 
-      gerarPalletEndereco(); 
-      gerarValidacaoFinal();
-      tocarSomNotificacao();
-      toast('Alocação executada com sucesso!', 'success');
-    });
-  } else {
-    if(palletsRestantes.length > 0) {
-      palletsRestantes.forEach(item => {
-        item.registros.forEach(r => {
-          STORE.alocacao.push({produto: r.produto, awb: r.awb, lote: r.lote, pallet: r.pallet, categoria: item.cat, endereco: 'SEM POSIÇÃO DISPONÍVEL'});
-        });
-      });
-    }
-    renderAlocacao(); 
-    gerarEntrada(); 
-    gerarPalletEndereco(); 
-    gerarValidacaoFinal();
-    tocarSomNotificacao();
-    toast('Alocação executada com sucesso!', 'success');
-  }
-}
 
+  if(!STORE.armazem.length){ toast('Importe o Armazém antes de alocar','warning'); abrirModalInicio(); return; }
+
+  const rua = document.getElementById('alocRua').value;
+
+  let ladoSel = document.getElementById('alocLado').value;
+
+  if(rua === '02' && ladoSel === 'PAR') ladoSel = '';
+
+  let posicoes = STORE.armazem.filter(a => a.rua === rua);
+
+  if(ladoSel) posicoes = posicoes.filter(a => a.lado === ladoSel);
+
+  
+
+  const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
+
+  const porPallet = {};
+
+  
+
+  STORE.ics.forEach(r => {
+
+    if(lotesComErro.has(normLote(r.lote))) return;
+
+    if(!porPallet[r.pallet]) porPallet[r.pallet] = [];
+
+    porPallet[r.pallet].push(r);
+
+  });
+
+  
+
+  const usadas = new Set();
+
+  STORE.alocacao = [];
+
+  let palletsRestantes = [];
+
+  
+
+  Object.keys(porPallet).forEach(pallet => {
+
+    const registros = porPallet[pallet];
+
+    if(registros.length === 0) return;
+
+    const cat = registros[0].categoria;
+
+    let pos = posicoes.find(p => !usadas.has(p.endereco) && p.categoria === cat);
+
+    if(!pos) pos = posicoes.find(p => !usadas.has(p.endereco));
+
+    if(pos) {
+
+      usadas.add(pos.endereco);
+
+      registros.forEach(r => {
+
+        STORE.alocacao.push({produto: r.produto, awb: r.awb, lote: r.lote, pallet: r.pallet, categoria: cat, endereco: pos.endereco});
+
+      });
+
+    } else {
+
+      palletsRestantes.push({pallet, registros, cat});
+
+    }
+
+  });
+
+  
+
+  if(palletsRestantes.length > 0 && ladoSel) {
+
+    const ladoOposto = ladoSel === 'IMPAR' ? 'PAR' : 'IMPAR';
+
+    abrirModal('Endereços esgotados', `Deseja alocar o restante no lado ${ladoOposto} da rua ${rua}?`, '⚠️', () => {
+
+      let posicoesOpostas = STORE.armazem.filter(a => a.rua === rua && a.lado === ladoOposto);
+
+      palletsRestantes.forEach(item => {
+
+        let pos = posicoesOpostas.find(p => !usadas.has(p.endereco) && p.categoria === item.cat);
+
+        if(!pos) pos = posicoesOpostas.find(p => !usadas.has(p.endereco));
+
+        const enderecoAlocado = pos ? pos.endereco : 'SEM POSIÇÃO DISPONÍVEL';
+
+        if(pos) usadas.add(pos.endereco);
+
+        item.registros.forEach(r => {
+
+          STORE.alocacao.push({produto: r.produto, awb: r.awb, lote: r.lote, pallet: r.pallet, categoria: item.cat, endereco: enderecoAlocado});
+
+        });
+
+      });
+
+      renderAlocacao(); gerarEntrada(); gerarPalletEndereco(); gerarValidacaoFinal();
+
+      toast('Alocação concluída!', 'success');
+
+    });
+
+  } else {
+
+    renderAlocacao(); gerarEntrada(); gerarPalletEndereco(); gerarValidacaoFinal();
+
+    toast('Alocação executada com sucesso!', 'success');
+
+  }
+
+}
 function renderAlocacao(){
   const selPallet = document.getElementById('filtroPalletAloc');
   const selRua = document.getElementById('alocRua');
