@@ -756,10 +756,15 @@ function mudarAba(nome){
   if(tabEl) tabEl.classList.add('active');
   document.querySelectorAll('#mainNav button').forEach(b => b.classList.toggle('active', b.dataset.tab === nome));
   
-  if(nome === 'saida') gerarSaida();
-  if(nome === 'concatenar') gerarConcatenar();
-  if(nome === 'pallet-endereco') gerarPalletEndereco(); // <-- Garante que gera ao abrir a aba
-  if(nome === 'validacao-final') gerarValidacaoFinal();
+  // Garante que os dados são gerados ou recalculados ao entrar em cada aba
+  if(nome === 'alocacao') {
+    if(STORE.alocacao.length === 0 && STORE.ics.length > 0 && STORE.armazem.length > 0) executarAlocacaoSilenciosa();
+    renderAlocacao();
+  }
+  if(nome === 'saida') { gerarSaida(); renderSaida(); }
+  if(nome === 'concatenar') { gerarConcatenar(); renderConcatenar(); }
+  if(nome === 'pallet-endereco') { gerarPalletEndereco(); renderPalletEndereco(); }
+  if(nome === 'validacao-final') { gerarValidacaoFinal(); renderValidacaoFinal(); }
 }
   
 function abrirPainel(nome){
@@ -809,13 +814,17 @@ function atualizarOpcoesLadoPorRua() {
 }
 
 function atualizarProcessosSubsequentes() {
-  if (STORE.armazem && STORE.armazem.length > 0 && STORE.ics && STORE.ics.length > 0) {
-    executarAlocacaoSilenciosa();
+  try {
+    if (typeof executarAlocacaoSilenciosa === 'function' && STORE.armazem.length > 0 && STORE.ics.length > 0) {
+      executarAlocacaoSilenciosa();
+    }
+    if (typeof gerarSaida === 'function') gerarSaida();
+    if (typeof gerarConcatenar === 'function') gerarConcatenar();
+    if (typeof gerarPalletEndereco === 'function') gerarPalletEndereco();
+    if (typeof gerarValidacaoFinal === 'function') gerarValidacaoFinal();
+  } catch (err) {
+    console.error("Erro ao atualizar processos subsequentes:", err);
   }
-  gerarSaida();
-  gerarConcatenar();
-  gerarPalletEndereco();
-  gerarValidacaoFinal();
 }
 
 function carregarCodigos(){
@@ -1765,7 +1774,6 @@ function gerarPalletEndereco(){
   const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
   const mapa = new Map();
   
-  // Varre tanto a alocação quanto a ICS ou Relação para garantir que encontre os pallets associados
   STORE.alocacao.forEach(item => {
     if(lotesComErro.has(normLote(item.lote))) return;
     let pal = item.pallet || item.pallete;
@@ -1775,41 +1783,26 @@ function gerarPalletEndereco(){
     }
   });
 
-  // Se por acaso a alocação estiver vazia, tenta mapear direto do ICS com a Relação
-  if(mapa.size === 0 && STORE.ics.length > 0) {
-    STORE.ics.forEach(item => {
-      let pal = item.pallet;
-      let relMatch = STORE.relacao.find(r => normLote(r.lote) === normLote(item.lote));
-      let end = relMatch ? (relMatch.endereco || 'Pendente') : 'Pendente';
-      if(pal && pal !== 'N/A' && pal !== '—' && !mapa.has(pal)) {
-        mapa.set(pal, end);
-      }
-    });
-  }
-
   mapa.forEach((endereco, pallet) => STORE.palletEndereco.push({ pallet, endereco }));
-  renderPalletEndereco();
 }
 
 function renderPalletEndereco(){
+  if(STORE.palletEndereco.length === 0) gerarPalletEndereco();
   const buscaEl = document.getElementById('buscaPalletEndereco');
   const busca = buscaEl ? norm(buscaEl.value) : '';
   const tbody = document.getElementById('tbodyPalletEndereco');
   const cnt = document.getElementById('cntPalletEndereco');
+  
   if(!tbody) return;
-  // Garante que gera os dados se a lista estiver vazia mas houver alocações
-  if(STORE.palletEndereco.length === 0 && STORE.alocacao.length > 0) {
-    gerarPalletEndereco();
-  }
   const filtrados = STORE.palletEndereco.filter(item => !busca || norm(item.pallet).includes(busca) || norm(item.endereco).includes(busca));
   if(cnt) cnt.textContent = filtrados.length + ' registros';
+  
   if(!filtrados.length){ 
-    tbody.innerHTML = '<tr><td colspan="2" class="empty-msg">Nenhum registo encontrado. Certifique-se de executar a alocação primeiro.</td></tr>'; 
+    tbody.innerHTML = '<tr><td colspan="2" class="empty-msg">Nenhum registo encontrado. Certifique-se de executar a Alocação Automática primeiro.</td></tr>'; 
     return; 
   }
   tbody.innerHTML = filtrados.map(item => `<tr><td><strong>${item.pallet}</strong></td><td><code>${item.endereco}</code></td></tr>`).join('');
 }
-
 function copiarTabelaOutlook(){
   if(!STORE.palletEndereco.length) gerarPalletEndereco();
   if(!STORE.palletEndereco.length){ toast('Nenhum dado para copiar.', 'warning'); return; }
