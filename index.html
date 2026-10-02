@@ -167,19 +167,16 @@ tr:hover td { background: #1a2538; }
 .empty-msg { text-align: center; color: var(--muted); padding: 40px !important; font-style: italic; }
 
 .badge-cat { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.025em; }
-.cat-baixo { background: rgba(37, 99, 235, 0.1); color: #60a5fa; border: 1px solid rgba(37, 99, 235, 0.3); }
-.cat-medio { background: rgba(217, 119, 6, 0.15); color: #fbbf24; border: 1px solid rgba(217, 119, 6, 0.4); }
-.cat-alto { background: var(--accent-red-light); color: #f87171; border: 1px solid rgba(220, 38, 38, 0.4); }
 
 .panel-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(2px); z-index: 99; display: none; opacity: 0; transition: opacity 0.3s ease; }
 .panel-overlay.show { display: block; opacity: 1; }
 
-#panel-erros, .panel {
+.panel {
   position: fixed !important;
   top: 0 !important;
   right: 0 !important;
-  width: 1000px !important;
-  max-width: 80vw !important;
+  width: 1050px !important;
+  max-width: 98vw !important;
   height: 100vh !important;
   background: var(--surface) !important;
   z-index: 100 !important;
@@ -191,12 +188,7 @@ tr:hover td { background: #1a2538; }
   border-left: 1px solid var(--border);
 }
 
-#panel-erros .table-container, #panel-erros .panel-body, .tabela-erros-wrapper {
-  flex: 1;
-  overflow-y: auto !important;
-}
-
-#panel-erros.show, .panel.show { transform: translateX(0) !important; }
+.panel.show { transform: translateX(0) !important; }
 
 .panel header { 
   background: var(--surface) !important;
@@ -220,19 +212,6 @@ tr:hover td { background: #1a2538; }
   gap: 12px !important; 
   background: var(--bg) !important;
 }
-
-#panel-erros .table-wrap {
-  width: 100% !important;
-  flex: 1 !important;
-  overflow: auto !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius) !important;
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
-}
-
-#panel-erros table { width: 100% !important; table-layout: auto !important; }
-#panel-erros th, #panel-erros td { padding: 12px 16px !important; text-align: left !important; }
 
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; margin-bottom: 14px; }
 .form-group { display: flex; flex-direction: column; gap: 5px; }
@@ -293,7 +272,6 @@ tr:hover td { background: #1a2538; }
   50% { background-color: rgba(220, 38, 38, 0.2); border-color: var(--accent-red); color: #fca5a5; }
   100% { background-color: var(--surface); border-color: var(--border); }
 }
-
 .btn-piscando { animation: piscarAlertaSimples 1.2s infinite ease-in-out; }
 
 * { scrollbar-width: thin; scrollbar-color: #1e293b transparent; }
@@ -320,7 +298,7 @@ tr:hover td { background: #1a2538; }
   <button class="hbtn success" onclick="salvarHistorico()">💾 Baixar Historico </button>
   <button class="hbtn danger" onclick="confirmarZerar()">🗑️ Reiniciar </button>
   <button class="hbtn" onclick="abrirModalInicio()">📥 </button>
-  <button class="hbtn" onclick="abrirPainel('codigos')">⚙️ Códidos Clientes<span class="badge" id="badgeCodigos">0</span></button>
+  <button class="hbtn" onclick="abrirPainel('codigos')">⚙ Códigos Clientes<span class="badge" id="badgeCodigos">0</span></button>
 </header>
 <nav id="mainNav">
   <button class="active" data-tab="relacao" onclick="mudarAba('relacao')">📋 Relação</button>
@@ -365,7 +343,7 @@ tr:hover td { background: #1a2538; }
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>PRODUTO/NOME FANTASIA</th><th>AWB</th><th>LOTE / MASTER</th><th>PALLET</th><th>ALTURA</th></tr></thead>
+          <thead><tr><th>PRODUTO/NOME FANTASIA</th><th>AWB</th><th>LOTE / MASTER</th><th>PALET</th><th>ALTURA</th></tr></thead>
           <tbody id="tbodyIcs"></tbody>
         </table>
       </div>
@@ -394,7 +372,6 @@ tr:hover td { background: #1a2538; }
       </div>
     </div>
   </section>
-  
   <section class="tab" id="tab-saida">
     <div class="card">
       <h2>📤 Saída <span class="cnt" id="cntSaida">0 registros</span></h2>
@@ -419,7 +396,6 @@ tr:hover td { background: #1a2538; }
         <button class="btn green" onclick="gerarConcatenar()">🔄 Atualizar Concatenar</button>
         <button class="btn amber" onclick="baixarConcatenarTxt()">📥 Baixar INV_v2JDU</button>
         <button class="btn ghost" onclick="baixarLocaisTxt()">📥 Baixar LOCAIS</button>
-        <button class="btn amber" onclick="baixarAmbosSaida()">📥 Baixar Saída</button>
         <div class="spacer"></div>
         <input type="search" id="buscaConcatenar" placeholder="🔍 Buscar na concatenação..." oninput="renderConcatenar()">
       </div>
@@ -489,7 +465,7 @@ tr:hover td { background: #1a2538; }
 
 <div class="panel-overlay" id="overlay-codigos" onclick="fecharPainel('codigos')"></div>
 <aside class="panel" id="panel-codigos">
-  <header><h2>⚙️ Códigos Clientes</h2><button class="p-close" onclick="fecharPainel('codigos')">✕</button></header>
+  <header><h2>⚙ Códigos Clientes</h2><button class="p-close" onclick="fecharPainel('codigos')">✕</button></header>
   <div class="p-body">
     <div class="toolbar">
       <input type="file" id="fileCodigos" accept=".csv,.xlsx,.xls" onchange="importarCodigos(this)" style="display:none">
@@ -512,10 +488,45 @@ tr:hover td { background: #1a2538; }
   </div>
 </aside>
 
+<!-- PAINEL CENTRAL DE ERROS E INCONSISTÊNCIAS -->
+<div class="panel-overlay" id="overlay-erros" onclick="fecharPainel('erros')"></div>
+<aside class="panel" id="panel-erros">
+  <header>
+    <h2>🚨 Central de Erros e Inconsistências <span class="cnt" id="cntErros" style="background:rgba(255,255,255,0.2);color:#fff;padding:2px 8px;border-radius:999px;font-size:0.75rem;margin-left:8px;">0 registros</span></h2>
+    <button class="p-close" onclick="fecharPainel('erros')">✕</button>
+  </header>
+  <div class="p-body">
+    <div class="toolbar" style="margin-bottom:12px; gap:8px; flex-wrap:wrap;">
+      <input type="search" id="buscaErros" placeholder="🔍 Buscar erro, lote ou detalhe..." oninput="renderErros()" style="flex:1;">
+      <select id="filtroCatErros" onchange="renderErros()">
+        <option value="">Todas as categorias</option>
+      </select>
+      <button class="btn amber sm" onclick="baixarErrosExcel()">📥 Baixar (Excel)</button>
+      <button class="btn red sm" onclick="confirmarLimparErros()">🗑️ Limpar Erros</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 28%;">PRODUTO</th>
+            <th style="width: 18%;">LOTE</th>
+            <th style="width: 26%;">AWB</th>
+            <th style="width: 28%;">PALLET</th>
+            <th style="width: 25%;">ERROS</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyErros">
+          <tr><td colspan="5" class="empty-msg">Nenhum erro registrado.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</aside>
+
 <div class="modal-overlay" id="modalInicio">
   <div class="modal" style="max-width:540px">
     <h3>📥 Importação Inicial</h3>
-    <p>Para começar, importe os arquivos base de <strong>Armazém</strong> e <strong>Estoque Local por Lote</strong> <a href="https://texcoprd.seniorcloud.com.br/siltwms/"  target="_blank" rel="noopener noreferrer" style="color: green;">Senior WMS</a> <br></p>
+    <p>Para começar, importe os arquivos base de <strong>Armazém</strong> e <strong>Estoque Local por Lote</strong> <a href="https://texcoprd.seniorcloud.com.br/siltwms/" target="_blank" style="color: green;">Senior WMS</a> <br></p>
     <br>
     <strong>Filtro do armazém:</strong><br>
     <strong>Estoque:</strong> Não <br>
@@ -556,49 +567,61 @@ tr:hover td { background: #1a2538; }
 </div>
 <div id="toast-container"></div>
 
-<div class="panel-overlay" id="overlay-erros" onclick="fecharPainel('erros')"></div>
-<aside class="panel" id="panel-erros">
-  <header>
-    <h2>🚨 Central de Erros e Inconsistências <span class="cnt" id="cntErros" style="background:rgba(255,255,255,0.2);color:#fff;padding:2px 8px;border-radius:999px;font-size:0.75rem;margin-left:8px;">0 registros</span></h2>
-    <button class="p-close" onclick="fecharPainel('erros')">✕</button>
-  </header>
-  <div class="p-body">
-    <div class="toolbar" style="margin-bottom:12px; gap:8px; flex-wrap:wrap;">
-      <input type="search" id="buscaErros" placeholder="🔍 Buscar erro, lote ou detalhe..." oninput="renderErros()" style="flex:1;">
-      <select id="filtroCatErros" onchange="renderErros()">
-        <option value="">Todas as categorias</option>
-      </select>
-      <button class="btn amber sm" onclick="baixarErrosExcel()">📥 Baixar (Excel)</button>
-      <button class="btn red sm" onclick="confirmarLimparErros()">🗑️ Limpar Erros</button>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 28%;">PRODUTO</th>
-            <th style="width: 18%;">LOTE</th>
-            <th style="width: 26%;">AWB</th>
-            <th style="width: 28%;">PALLET</th>
-            <th style="width: 25%;">ERROS</th>
-          </tr>
-        </thead>
-        <tbody id="tbodyErros">
-          <tr><td colspan="4" class="empty-msg">Nenhum erro registrado.</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</aside>
-
 <script>
-// --- SCRIPT WMS INTEGRADO ---
+// --- SISTEMA DE SOM NATIVO (Bipe Clássico Rápido) ---
+let audioCtx = null;
+function obterAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  return audioCtx;
+}
+
+function tocarSom(tipo) {
+  try {
+    const ctx = obterAudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    const agora = ctx.currentTime;
+    
+    if (tipo === 'success') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, agora);
+      gain.gain.setValueAtTime(0.08, agora);
+      gain.gain.exponentialRampToValueAtTime(0.001, agora + 0.08);
+      osc.start(agora);
+      osc.stop(agora + 0.08);
+    } else if (tipo === 'error') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(220, agora);
+      gain.gain.setValueAtTime(0.1, agora);
+      gain.gain.exponentialRampToValueAtTime(0.001, agora + 0.1);
+      osc.start(agora);
+      osc.stop(agora + 0.1);
+    } else {
+      // Bipe padrão rápido para uploads e ações gerais
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, agora);
+      gain.gain.setValueAtTime(0.06, agora);
+      gain.gain.exponentialRampToValueAtTime(0.001, agora + 0.06);
+      osc.start(agora);
+      osc.stop(agora + 0.06);
+    }
+  } catch (e) {}
+}
+
 document.addEventListener('click', function unlockAudio() {
-try { const audioTest = new Audio(); audioTest.play().catch(() => {}); } catch (e) {}
+  obterAudioContext();
 }, { once: true });
 
 const LS_KEY = 'wms_codigos_clientes';
 const STORE = {
-  relacao: [], ics: [], armazém: [], armazem: [], alocacao: [], entrada: [],
+  relacao: [], ics: [], armazém: [], armazem: [], alocacao: [],
   estoqueLocal: [], estoqueLocalRaw: [], saida: [], concatenar: [], codigos: [], erros: [], palletEndereco: [], validacaoFinal: []
 };
 
@@ -606,39 +629,32 @@ function norm(t){
   if(t === null || t === undefined) return '';
   return String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
 }
-
 function normPuntuacao(t) {
   if (t === null || t === undefined) return '';
-  return String(t)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toUpperCase()
-    .replace(/[\,\-\~\çÇ]/g, '')
-    .replace(/[^A-Z0-9 ]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return String(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[\,\-\~\çÇ]/g, '').replace(/[^A-Z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
 }
-
 function normCab(t){
   return norm(t).replace(/Ã/g,'A').replace(/Â/g,'A').replace(/º/g,'O').replace(/ª/g,'A').replace(/Þ/g,'P');
 }
-
 function normLado(t){
   let s = norm(t); s = s.replace(/Ã/g,'A');
   if(s.includes('IMPAR')) return 'IMPAR';
   if(s.includes('PAR')) return 'PAR';
   return s;
 }
-
 function normLote(t) {
   if (t === null || t === undefined) return '';
   let limpo = String(t).trim().toUpperCase();
-  if (limpo.startsWith('A') && limpo.length > 1) {
+  limpo = limpo.replace(/[^A-Z0-9]/g, '');
+  if (limpo.startsWith('PAR') && limpo.length > 3) {
+    limpo = limpo.substring(3);
+  } else if (limpo.startsWith('REV') && limpo.length > 3) {
+    limpo = limpo.substring(3);
+  } else if (limpo.startsWith('A') && limpo.length > 1) {
     limpo = limpo.substring(1);
   }
   return limpo;
 }
-
 function categoriaAltura(h){
   let n = parseInt(h,10);
   if(isNaN(n)) return '—';
@@ -647,7 +663,6 @@ function categoriaAltura(h){
   if(n >= 7) return 'ALTO';
   return '—';
 }
-
 function categoriaAlturaTexto(t){
   let s = norm(t);
   if(s.includes('BAIX')) return 'BAIXO';
@@ -655,16 +670,15 @@ function categoriaAlturaTexto(t){
   if(s.includes('ALT')) return 'ALTO';
   return '—';
 }
-
 function parseAltura(v){
   if(v === null || v === undefined) return {num:null, cat:'—'};
   let s = String(v).trim();
   if(/^\d+$/.test(s)){ let n = parseInt(s,10); return {num:n, cat:categoriaAltura(n)}; }
   return {num:null, cat:categoriaAlturaTexto(s)};
 }
-
 function toast(msg, tipo='info'){
-  const icons = {success:'✅', error:'❌', info:'ℹ️️', warning:'⚠️'};
+  tocarSom(tipo);
+  const icons = {success:'✅', error:'❌', info:'ℹ', warning:'⚠️'};
   const c = document.getElementById('toast-container');
   if(!c) return;
   const el = document.createElement('div');
@@ -673,17 +687,28 @@ function toast(msg, tipo='info'){
   c.appendChild(el);
   setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300);},3500);
 }
-
 function lerArquivo(file, cb) {
   const reader = new FileReader();
+  const limparJsonVazios = (json) => {
+    return json.map(linha => {
+      const novaLinha = {};
+      Object.keys(linha).forEach(k => {
+        if (k && !k.startsWith('__EMPTY')) {
+          novaLinha[k] = linha[k];
+        }
+      });
+      return novaLinha;
+    });
+  };
+
   if (file.name.toLowerCase().endsWith('.csv')) {
     reader.onload = e => {
       try {
         const text = e.target.result;
         const wb = XLSX.read(text, { type: 'string', raw: true });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
-        cb(json);
+        const jsonBruto = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        cb(limparJsonVazios(jsonBruto));
       } catch (err) {
         toast('Erro ao ler arquivo CSV: ' + err.message, 'error');
       }
@@ -695,8 +720,8 @@ function lerArquivo(file, cb) {
         const data = new Uint8Array(e.target.result);
         const wb = XLSX.read(data, { type: 'array' });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
-        cb(json);
+        const jsonBruto = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        cb(limparJsonVazios(jsonBruto));
       } catch (err) {
         toast('Erro ao ler arquivo Excel: ' + err.message, 'error');
       }
@@ -704,26 +729,22 @@ function lerArquivo(file, cb) {
     reader.readAsArrayBuffer(file);
   }
 }
-
 function acharColuna(linha, alias){
   const keys = Object.keys(linha);
   for(const a of alias){ for(const k of keys){ if(norm(k) === norm(a)) return k; } }
   for(const a of alias){ for(const k of keys){ if(norm(k).includes(norm(a)) || norm(a).includes(norm(k))) return k; } }
   return null;
 }
-
 function acharColunaFlex(linha, alias, padroes){
   const keys = Object.keys(linha);
   for(const a of alias){ for(const k of keys){ if(normCab(k) === normCab(a)) return k; } }
   for(const p of padroes){ for(const k of keys){ if(normCab(k).includes(p)) return k; } }
   return null;
 }
-
 function val(linha, alias){
   const k = acharColuna(linha, alias);
   return k ? linha[k] : '';
 }
-
 function baixarExcel(abas, filename){
   const wb = XLSX.utils.book_new();
   abas.forEach(a => {
@@ -735,13 +756,13 @@ function baixarExcel(abas, filename){
 
 let modalCallback = null;
 function abrirModal(title, msg, icon, cb){
+  tocarSom('warning');
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalMsg').textContent = msg;
   document.getElementById('modalIcon').textContent = icon || '⚠️';
   modalCallback = cb;
   document.getElementById('modalConfirm').classList.add('show');
 }
-
 function fecharModal(){ document.getElementById('modalConfirm').classList.remove('show'); modalCallback = null; }
 const btnModalOk = document.getElementById('modalOk');
 if(btnModalOk) btnModalOk.onclick = () => { const cb = modalCallback; fecharModal(); if(cb) cb(); };
@@ -753,19 +774,18 @@ function fecharModalInicio(){
     toast('Atenção: Sem o Armazém ou Estoque Local completos, algumas rotinas podem ficar limitadas.', 'warning');
   }
 }
-
 function mudarAba(nome){
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   const tabEl = document.getElementById('tab-'+nome);
   if(tabEl) tabEl.classList.add('active');
   document.querySelectorAll('#mainNav button').forEach(b => b.classList.toggle('active', b.dataset.tab === nome));
   if(nome === 'saida') gerarSaida();
-  if(nome === 'entrada') gerarEntrada();
   if(nome === 'concatenar') gerarConcatenar();
   if(nome === 'pallet-endereco') gerarPalletEndereco();
   if(nome === 'validacao-final') gerarValidacaoFinal();
 }
 function abrirPainel(nome){
+  tocarSom('info');
   document.getElementById('panel-'+nome).classList.add('show');
   document.getElementById('overlay-'+nome).classList.add('show');
   if(nome === 'codigos') renderCodigos();
@@ -799,15 +819,10 @@ function atualizarOpcoesLadoPorRua() {
   }
 }
 function atualizarProcessosSubsequentes() {
-  if (STORE.armazem && STORE.armazem.length > 0 && STORE.ics && STORE.ics.length > 0) {
-    executarAlocacaoSilenciosa();
-  } else {
-    gerarEntrada();
-    gerarSaida();
-    gerarConcatenar();
-    gerarPalletEndereco();
-    gerarValidacaoFinal();
-  }
+  gerarSaida();
+  gerarConcatenar();
+  gerarPalletEndereco();
+  gerarValidacaoFinal();
 }
 function carregarCodigos(){
   try{
@@ -832,30 +847,33 @@ function adicionarCodigo(){
   STORE.codigos.push({codigo: c, nome: n});
   salvarCodigos();
   renderCodigos(); 
-  reprocessarAposAtualizarCodigos(); 
+  atualizarProcessosSubsequentes();
   document.getElementById('novoCodigo').value = ''; 
   document.getElementById('novoNome').value = '';
-  toast('Código adicionado e processo atualizado!','success');
+  toast('Código adicionado com sucesso!','success');
 }
 function removerCodigo(i){
   STORE.codigos.splice(i, 1); 
   salvarCodigos(); 
   renderCodigos(); 
+  atualizarProcessosSubsequentes();
+  toast('Código removido','info');
 }
-
-function confirmarLimparCodigos() {
-  STORE.codigos = []; 
-  salvarCodigos(); 
-  renderCodigos(); 
+function confirmarLimparCodigos(){
+  abrirModal('Excluir Todos','Tem certeza que deseja excluir TODOS os códigos de clientes?','🗑️',()=>{
+    STORE.codigos = []; 
+    salvarCodigos(); 
+    renderCodigos(); 
+    atualizarProcessosSubsequentes();
+    toast('Todos os códigos foram excluídos','success');
+  });
 }
-
 function confirmarLimparErros(){
   STORE.erros = []; 
   salvarErros();
   renderErros();
   toast('Central de erros limpa com sucesso!', 'success');
 }
-
 function importarCodigos(input){
   if(!input.files.length) return;
   lerArquivo(input.files[0], json => {
@@ -870,163 +888,11 @@ function importarCodigos(input){
     });
     salvarCodigos();
     renderCodigos(); 
-    reprocessarAposAtualizarCodigos();
-    toast(count + ' códigos importados e sistema recalculado!','success');
+    atualizarProcessosSubsequentes();
+    toast(count + ' códigos importados com sucesso!','success');
     input.value = '';
   });
 }
-function reprocessarAposAtualizarCodigos() {
-  if (STORE.erros && STORE.erros.length > 0) {
-    STORE.erros = STORE.erros.filter(e => {
-      if (e.categoria === 'DEVOLVER, CADASTRAR NO SENIOR' || e.categoria === 'FORMATAÇÃO') {
-        const codObj = STORE.codigos.find(c => norm(c.nome) === norm(e.produto) || normPuntuacao(c.nome) === normPuntuacao(e.produto));
-        return !codObj;
-      }
-      return true;
-    });
-  }
-  
-  if (STORE.ics && STORE.ics.length > 0) {
-    const icOriginal = [...STORE.ics];
-    processarIcsIndependenteSilencioso(icOriginal);
-  }
-  
-  if (STORE.alocacao && STORE.alocacao.length > 0) {
-    executarAlocacaoSilenciosa();
-  }
-
-  salvarErros();
-  renderErros();
-  renderIcs();
-  renderRelacao();
-  atualizarProcessosSubsequentes();
-}
-
-function processarIcsIndependente(jsonIcs) {
-  STORE.ics = [];
-  const chavesIcsSet = new Set();
-  
-  jsonIcs.forEach(linha => {
-    const produto = norm(val(linha, ['PRODUTO/NOME FANTASIA', 'NOME FANTASIA DO CLIENTE', 'NOME FANTASIA', 'CLIENTE', 'PRODUTO']));
-    const awb = norm(val(linha, ['AWB', 'AWB/LOTE/MASTER']));
-    const lote = normLote(val(linha, ['Lote/ID AWB Master', 'LOTE/ MASTER', 'LOTE / MASTER', 'LOTE/MASTER', 'LOTE', 'MASTER', 'LOTE INDÚSTRIA', 'LOTE INDUSTRIA']));
-    let palletIcs = norm(val(linha, ['PALET', 'PALLET', 'PALLETE', 'PALETE', 'Nº PALLET']));
-    
-    if(!lote && !awb) return;
-
-    if (!palletIcs && STORE.relacao && STORE.relacao.length > 0) {
-      const relMatch = STORE.relacao.find(r => normLote(r.lote) === lote);
-      if (relMatch) palletIcs = norm(relMatch.pallete || relMatch.pallet);
-    }
-
-    const chaveUnica = `${lote}_${awb}_${palletIcs}`;
-    if (chavesIcsSet.has(chaveUnica)) {
-      registrarErro('LOTE DUPLICADO', `O lote "${lote}" com o AWB "${awb}" e pallet "${palletIcs || 'N/A'}" possui ocorrências duplicadas no arquivo ICS.`, palletIcs || 'N/A', lote, awb, produto);
-      return;
-    }
-    chavesIcsSet.add(chaveUnica);
-
-    const codObj = STORE.codigos.find(c => norm(c.nome) === norm(produto));
-    if (!codObj || !codObj.codigo) {
-      const codObjFormat = STORE.codigos.find(c => normPuntuacao(c.nome) === normPuntuacao(produto));
-      if (codObjFormat && codObjFormat.codigo) {
-        registrarErro('FORMATAÇÃO', `O produto/nome fantasia "${produto}" possui diferença de formatação em relação ao cadastro "${codObjFormat.nome}".`, palletIcs || 'N/A', lote, awb, produto);
-        return;
-      }
-
-      registrarErro('DEVOLVER, CADASTRAR NO SENIOR', `O produto/nome fantasia "${produto || 'VAZIO'}" não foi encontrado na base de Códigos Clientes.`, palletIcs || 'N/A', lote, awb, produto);
-      return; 
-    }
-
-    STORE.ics.push({produto, awb, lote, pallet: palletIcs || 'N/A', altura: '—', categoria: '—'});
-  });
-  
-  if (STORE.relacao && STORE.relacao.length > 0) {
-    compararRelacaoComICS();
-  }
-  atualizarProcessosSubsequentes();
-  renderIcs(); 
-  renderRelacao(); 
-  renderErros();
-  toast('ICS importada e validada com sucesso!', 'success');
-}
-
-function processarIcsIndependenteSilencioso(jsonIcs) {
-  STORE.ics = [];
-  const lotesDuplicadosSet = new Set(STORE.erros.filter(e => e.categoria === 'LOTE DUPLICADO' || e.categoria === 'PALLET DUPLICADO').map(e => normLote(e.lote)));
-  
-  jsonIcs.forEach(linha => {
-    const produto = norm(val(linha, ['PRODUTO/NOME FANTASIA', 'NOME FANTASIA DO CLIENTE', 'NOME FANTASIA', 'CLIENTE', 'PRODUTO']));
-    const awb = norm(val(linha, ['AWB', 'AWB/LOTE/MASTER']));
-    const lote = normLote(val(linha, ['Lote/ID AWB Master', 'LOTE/ MASTER', 'LOTE / MASTER', 'LOTE/MASTER', 'LOTE', 'MASTER', 'LOTE INDÚSTRIA', 'LOTE INDUSTRIA']));
-    let palletIcs = norm(val(linha, ['PALET', 'PALLET', 'PALLETE', 'PALETE', 'Nº PALLET']));
-    
-    if(!lote && !awb) return;
-    if(lotesDuplicadosSet.has(lote)) return;
-
-    if (!palletIcs && STORE.relacao && STORE.relacao.length > 0) {
-      const relMatch = STORE.relacao.find(r => normLote(r.lote) === lote);
-      if (relMatch) palletIcs = norm(relMatch.pallete || relMatch.pallet);
-    }
-
-    STORE.ics.push({produto, awb, lote, pallet: palletIcs, altura: '—', categoria: '—'});
-  });
-  
-  if (STORE.relacao && STORE.relacao.length > 0) {
-    compararRelacaoComICS();
-  }
-}
-
-function executarAlocacaoSilenciosa() {
-  const rua = document.getElementById('alocRua') ? document.getElementById('alocRua').value : '01';
-  let posicoes = STORE.armazem.filter(a => a.rua === rua);
-  const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
-  const porPallet = {};
-  
-  STORE.ics.forEach(r => {
-    if (lotesComErro.has(normLote(r.lote))) return; 
-    let chavePallet = (r.pallet && r.pallet !== 'N/A' && r.pallet !== '—') ? norm(r.pallet) : `AWB_${r.awb}_${r.lote}`;
-    if (!porPallet[chavePallet]) porPallet[chavePallet] = [];
-    porPallet[chavePallet].push(r);
-  });
-  
-  const usadas = new Set();
-  STORE.alocacao = [];
-  
-  Object.keys(porPallet).forEach(pallet => {
-    const registros = porPallet[pallet];
-    if(registros.length === 0) return;
-    const cat = registros[0].categoria;
-    let pos = posicoes.find(p => !usadas.has(p.endereco) && p.categoria === cat);
-    if(!pos) pos = posicoes.find(p => !usadas.has(p.endereco));
-    
-    if(pos) {
-      usadas.add(pos.endereco);
-      registros.forEach(r => {
-        STORE.alocacao.push({
-          produto: r.produto, 
-          awb: r.awb, 
-          lote: r.lote, 
-          pallet: r.pallet, 
-          categoria: cat, 
-          endereco: pos.endereco
-        });
-      });
-    } else {
-      registros.forEach(r => {
-        STORE.alocacao.push({
-          produto: r.produto, 
-          awb: r.awb, 
-          lote: r.lote, 
-          pallet: r.pallet, 
-          categoria: cat, 
-          endereco: 'SEM POSIÇÃO DISPONÍVEL'
-        });
-      });
-    }
-  });
-}
-
 function renderCodigos(){
   const busca = norm(document.getElementById('buscaCodigos').value);
   const tbody = document.getElementById('tbodyCodigos');
@@ -1038,18 +904,7 @@ function renderCodigos(){
     return `<tr><td><strong>${c.codigo}</strong></td><td>${c.nome}</td><td><button class="btn red sm" onclick="removerCodigo(${i})">🗑️</button></td></tr>`;
   }).join('');
 }
-function carregarErros(){ STORE.erros = []; atualizarBadgeErros(); renderErros(); }
-function salvarErros(){ atualizarBadgeErros(); }
 
-function atualizarBadgeErros(){
-  const badge = document.getElementById('badgeErros');
-  const btnHeader = document.querySelector('button[onclick="abrirPainel(\'erros\')"]');
-  if(badge) badge.textContent = STORE.erros.length;
-  if(btnHeader) {
-    if(STORE.erros.length > 0) btnHeader.classList.add('btn-piscando');
-    else btnHeader.classList.remove('btn-piscando');
-  }
-}
 function registrarErro(categoria, mensagem, pallet, lote='', awb='', produto=''){
   categoria = String(categoria || 'GERAL').trim();
   mensagem = String(mensagem || '').trim();
@@ -1059,9 +914,19 @@ function registrarErro(categoria, mensagem, pallet, lote='', awb='', produto='')
   if(STORE.erros.some(e => e.chave === chave)) return;
   const data = new Date().toLocaleString('pt-BR');
   STORE.erros.push({ id: Date.now() + Math.random(), categoria, mensagem, pallet, lote, awb, produto, data, chave });
-  salvarErros(); renderErros();
+  salvarErros(); 
+  renderErros();
 }
-
+function salvarErros(){ atualizarBadgeErros(); }
+function atualizarBadgeErros(){
+  const badge = document.getElementById('badgeErros');
+  const btnHeader = document.querySelector('button[onclick="abrirPainel(\'erros\')"]');
+  if(badge) badge.textContent = STORE.erros.length;
+  if(btnHeader) {
+    if(STORE.erros.length > 0) btnHeader.classList.add('btn-piscando');
+    else btnHeader.classList.remove('btn-piscando');
+  }
+}
 function renderErros(){
   const buscaEl = document.getElementById('buscaErros');
   const busca = buscaEl ? norm(buscaEl.value) : '';
@@ -1075,20 +940,9 @@ function renderErros(){
   }
   
   let filtrados = catAtual ? STORE.erros.filter(e => e.categoria === catAtual) : STORE.erros;
-  
   if(busca) {
     filtrados = filtrados.filter(e => {
-      let lTxt = e.lote || '';
-      let aTxt = e.awb || '';
-      let pTxt = e.produto || '';
-      let palTxt = e.pallet || '';
-      let eTxt = e.mensagem || '';
-      return norm(pTxt).includes(busca) ||
-        norm(lTxt).includes(busca) ||
-        norm(aTxt).includes(busca) ||
-        norm(palTxt).includes(busca) ||
-        norm(eTxt).includes(busca) ||
-        norm(e.categoria).includes(busca);
+      return norm(e.produto).includes(busca) || norm(e.lote).includes(busca) || norm(e.awb).includes(busca) || norm(e.pallet).includes(busca) || norm(e.mensagem).includes(busca) || norm(e.categoria).includes(busca);
     });
   }
   
@@ -1108,72 +962,37 @@ function renderErros(){
     let produtoTexto = e.categoria === 'LOTE NAO LOCALIZADO NO ICS' ? '—' : (e.produto || '—');
     let palletTexto = e.pallet || '—';
     
-    let erroTexto = e.mensagem || e.categoria || '—';
-    if (erroTexto.includes('não foi encontrado na base de Códigos Clientes')) {
-      erroTexto = 'Devolver';
-    } else if (e.categoria === 'FORMATAÇÃO' || erroTexto.includes('formatação')) {
-      erroTexto = 'Formatação';
-    } else if (e.categoria === 'LOTE NAO LOCALIZADO NO ICS' || erroTexto.includes('ICS')) {
-      erroTexto = 'Não localizado no ICS';
-    } else if (e.categoria === 'LOTE DUPLICADO' || erroTexto.includes('duplicado')) {
-      erroTexto = 'Lote duplicado';
-    }
+    // Exibição simplificada baseada apenas no nome/categoria do erro
+    let erroTexto = e.categoria || '—';
+    if (e.categoria === 'DEVOLVER, CADASTRAR NO SENIOR') erroTexto = 'DEVOLVER / CADASTRAR NO SENIOR';
+    else if (e.categoria === 'FORMATAÇÃO') erroTexto = 'FORMATAÇÃO';
+    else if (e.categoria === 'LOTE NAO LOCALIZADO NO ICS') erroTexto = 'NÃO LOCALIZADO NO ICS';
+    else if (e.categoria === 'LOTE DUPLICADO') erroTexto = 'LOTE DUPLICADO';
     
-    const colunaAwbHtml = awbTexto 
-      ? `<code style="background: rgba(255,255,255,0.07); padding: 2px 6px; border-radius: 4px; color: #60a5fa; font-weight: 600;">${awbTexto}</code>`
-      : `<span style="color: #64748b;">—</span>`;
+    const colunaAwbHtml = awbTexto ? `<code style="background: rgba(255,255,255,0.07); padding: 2px 6px; border-radius: 4px; color: #60a5fa; font-weight: 600;">${awbTexto}</code>` : `<span style="color: #64748b;">—</span>`;
 
     return `<tr>
       <td><span style="color:var(--text); font-weight:600; font-size: 13px;">${produtoTexto}</span></td>
       <td><strong style="font-size: 14px;">${loteTexto}</strong></td>
       <td>${colunaAwbHtml}</td>
       <td style="font-size: 13px; color: var(--primary);"><strong>${palletTexto}</strong></td>
-      <td style="font-size: 13px; color: var(--text-muted, #94a3b8); white-space: nowrap;">${erroTexto}</td>
+      <td style="font-size: 13px; color: #f87171; font-weight: 700; white-space: nowrap;">${erroTexto}</td>
     </tr>`;
   }).join('');
 }
-
 function baixarErrosExcel() {
-  const buscaEl = document.getElementById('buscaErros');
-  const busca = buscaEl ? norm(buscaEl.value) : '';
-  const selCat = document.getElementById('filtroCatErros');
-  const catAtual = selCat ? selCat.value : '';
-  const categoriasPadrao = ['LOTE DUPLICADO', 'LOTE NAO LOCALIZADO NO ICS', 'DEVOLVER, CADASTRAR NO SENIOR', 'FORMATAÇÃO'];
-  
-  let filtrados = catAtual ? STORE.erros.filter(e => e.categoria === catAtual) : STORE.erros;
-  if(busca) {
-    filtrados = filtrados.filter(e => {
-      return norm(e.produto).includes(busca) ||
-        norm(e.lote).includes(busca) ||
-        norm(e.awb).includes(busca) ||
-        norm(e.pallet).includes(busca) ||
-        norm(e.categoria).includes(busca);
-    });
-  }
-  
-  if(!filtrados.length){
-    toast('Não há registros para baixar.', 'warning');
-    return;
-  }
-  const dadosParaExportar = filtrados.map(e => ({
-    "STATUS / CATEGORIA": e.categoria,
-    "PRODUTO": e.produto || '—',
-    "LOTE": e.lote || '—',
-    "AWB": e.awb || '',
-    "PALLET": e.pallet || '—'
+  if(!STORE.erros.length){ toast('Não há registros para baixar.', 'warning'); return; }
+  const dadosParaExportar = STORE.erros.map(e => ({
+    "STATUS / CATEGORIA": e.categoria, "PRODUTO": e.produto || '—', "LOTE": e.lote || '—', "AWB": e.awb || '', "PALLET": e.pallet || '—'
   }));
-  baixarExcel([{nome: "Erros Filtrados", data: dadosParaExportar}], "relatorio_erros_visual.xlsx");
+  baixarExcel([{nome: "Erros Inconsistencias", data: dadosParaExportar}], "relatorio_erros_visual.xlsx");
   toast('Arquivo Excel baixado com sucesso!', 'success');
 }
 
+// --- Funções de Relação, ICS e Alocação ---
 function compararRelacaoComICS() {
   if (!STORE.ics || STORE.ics.length === 0 || !STORE.relacao || STORE.relacao.length === 0) return;
-  
   const lotesIcsSet = new Set(STORE.ics.map(item => normLote(item.lote)));
-  const lotesComErroDevolver = new Set(
-    STORE.erros.filter(e => e.categoria === 'DEVOLVER, CADASTRAR NO SENIOR' || e.categoria === 'FORMATAÇÃO').map(e => normLote(e.lote))
-  );
-
   const relacaoValida = [];
   
   STORE.relacao.forEach(item => {
@@ -1181,41 +1000,52 @@ function compararRelacaoComICS() {
     if (lotesIcsSet.has(loteNorm)) {
       relacaoValida.push(item);
     } else {
-      if (!lotesComErroDevolver.has(loteNorm)) {
-        registrarErro(
-          'LOTE NAO LOCALIZADO NO ICS',
-          `O lote "${item.lote}" consta na Relação, mas não foi localizado no arquivo ICS.`,
-          item.pallet || item.pallete || 'N/A',
-          item.lote,
-          '',
-          ''
-        );
+      registrarErro('LOTE NAO LOCALIZADO NO ICS', `O lote "${item.lote}" consta na Relação, mas não foi localizado no arquivo ICS.`, item.pallet || 'N/A', item.lote, '', '');
+    }
+  });
+  STORE.relacao = relacaoValida;
+}
+
+function processarIcsIndependente(jsonIcs) {
+  STORE.ics = [];
+  const chavesIcsSet = new Set();
+  
+  jsonIcs.forEach(linha => {
+    const produto = norm(val(linha, ['PRODUTO/NOME FANTASIA', 'NOME FANTASIA DO CLIENTE', 'NOME FANTASIA', 'CLIENTE', 'PRODUTO']));
+    const awb = norm(val(linha, ['AWB', 'AWB/LOTE/MASTER']));
+    const loteBruto = val(linha, ['REV', 'Lote/ID AWB Master', 'LOTE/ MASTER', 'LOTE / MASTER', 'LOTE/MASTER', 'LOTE', 'MASTER', 'A', 'LOTE INDÚSTRIA', 'LOTE INDUSTRIA', 'RECUSAS', 'PAR']);
+    const lote = normLote(loteBruto);
+    
+    if(!lote && !awb) return;
+
+    let palletFinal = norm(val(linha, ['PALET', 'PALLET', 'PALLETE', 'PALETE', 'Nº PALLET', 'PAR', 'LACRES', 'PALLET ', 'ENDEREÇO', 'ENDERECO']));
+    if (!palletFinal || palletFinal === 'N/A' || palletFinal === '—') {
+      const relMatch = STORE.relacao.find(r => normLote(r.lote) === lote || String(r.lote).trim() === String(loteBruto).trim());
+      if (relMatch) palletFinal = norm(relMatch.pallet || relMatch.pallete || relMatch.par || relMatch.lacres || relMatch.endereco);
+    }
+    if (!palletFinal) palletFinal = 'N/A';
+
+    const chaveUnica = `${lote}_${awb}`;
+    if (chavesIcsSet.has(chaveUnica)) return;
+    chavesIcsSet.add(chaveUnica);
+
+    const codObj = STORE.codigos.find(c => norm(c.nome) === norm(produto));
+    if (!codObj || !codObj.codigo) {
+      const codObjFormat = STORE.codigos.find(c => normPuntuacao(c.nome) === normPuntuacao(produto));
+      if (codObjFormat && codObjFormat.codigo) {
+        registrarErro('FORMATAÇÃO', `Diferença de formatação para "${produto}".`, palletFinal, lote, awb, produto);
+      } else {
+        registrarErro('DEVOLVER, CADASTRAR NO SENIOR', `Produto "${produto || 'VAZIO'}" não encontrado na base.`, palletFinal, lote, awb, produto);
       }
     }
+
+    STORE.ics.push({ produto, awb, lote: String(loteBruto).trim().toUpperCase(), pallet: palletFinal, altura: '—', categoria: '—' });
   });
   
-  STORE.relacao = relacaoValida;
-  sincronizarRelacaoWithIcs();
-}
-
-function sincronizarRelacaoWithIcs() {
-  if (!STORE.ics || !STORE.relacao) return;
-  STORE.ics.forEach(itemIcs => {
-    const correspondente = STORE.relacao.find(r => normLote(r.lote) === normLote(itemIcs.lote));
-    if (correspondente) {
-      itemIcs.altura = correspondente.altura;
-      itemIcs.categoria = correspondente.categoria;
-      itemIcs.pallet = correspondente.pallet;
-    }
-  });
-}
-
-function importarRelacao(input){
-  if(!input.files.length) return;
-  lerArquivo(input.files[0], jsonRelacao => {
-    processarRelacaoIndependente(jsonRelacao);
-    input.value = '';
-  });
+  if (STORE.relacao.length > 0) compararRelacaoComICS();
+  atualizarProcessosSubsequentes();
+  renderIcs(); renderRelacao(); renderErros();
+  toast('ICS importada com sucesso!', 'success');
 }
 
 function processarRelacaoIndependente(jsonRelacao) {
@@ -1225,10 +1055,7 @@ function processarRelacaoIndependente(jsonRelacao) {
     const lote = normLote(val(linha, ['LOTE', 'LOTE / MASTER', 'LOTE/MASTER', 'MASTER']));
     const pallet = norm(val(linha, ['PALLET', 'PALLETE', 'PALETE', 'Nº PALLET'])) || 'N/A';
     if (!lote) return;
-
-    if (!mapaLotes[lote]) {
-      mapaLotes[lote] = new Set();
-    }
+    if (!mapaLotes[lote]) mapaLotes[lote] = new Set();
     mapaLotes[lote].add(pallet);
   });
 
@@ -1238,7 +1065,7 @@ function processarRelacaoIndependente(jsonRelacao) {
   jsonRelacao.forEach(linha => {
     const lote = normLote(val(linha, ['LOTE', 'LOTE / MASTER', 'LOTE/MASTER', 'MASTER']));
     const pallet = norm(val(linha, ['PALLET', 'PALLETE', 'PALETE', 'Nº PALLET'])) || 'N/A';
-    const obs = val(linha, ['OBSERVAÇÕES', 'OBSERVACAO', 'OBS', 'OBSERVACOES', 'OBSERVAÇÃO']);
+    const obs = val(linha, ['OBSERVAÇÕES', 'OBSERVACAO', 'OBS', 'OBSERVAÇÕES']);
     if (!lote) return;
 
     const status = val(linha, ['STATUS', 'ALTURA', 'HEIGHT']);
@@ -1249,34 +1076,30 @@ function processarRelacaoIndependente(jsonRelacao) {
       if (!lotesDuplicadosRegistrados.has(lote)) {
         lotesDuplicadosRegistrados.add(lote);
         const listaPallets = Array.from(mapaLotes[lote]).join(', ');
-        registrarErro(
-          'LOTE DUPLICADO', 
-          `O lote "${lote}" está duplicado nos pallets: [${listaPallets}] e foi retirado do processo.`, 
-          listaPallets, 
-          lote, 
-          '', 
-          ''
-        );
+        registrarErro('LOTE DUPLICADO', `O lote "${lote}" está duplicado nos pallets: [${listaPallets}].`, listaPallets, lote, '', '');
       }
-      return;
     }
 
     const chaveUnica = `${lote}_${pallet}`;
-    if (chavesVistas.has(chaveUnica)) {
-      return; 
-    }
+    if (chavesVistas.has(chaveUnica)) return;
     chavesVistas.add(chaveUnica);
 
     STORE.relacao.push({lote, pallet, altura: alturaFormatada, categoria: cat, obs: String(obs || '').trim()});
   });
   
   if(STORE.ics.length > 0) compararRelacaoComICS();
-  
   atualizarProcessosSubsequentes();
-  renderRelacao(); 
-  renderIcs(); 
-  renderErros();
-  toast('Relação validada com sucesso!', 'success');
+  renderRelacao(); renderIcs(); renderErros();
+  toast('Relação processada com sucesso!', 'success');
+}
+
+function importarRelacao(input){
+  if(!input.files.length) return;
+  lerArquivo(input.files[0], jsonRelacao => { processarRelacaoIndependente(jsonRelacao); input.value = ''; });
+}
+function importarIcs(input){
+  if(!input.files.length) return;
+  lerArquivo(input.files[0], jsonIcs => { processarIcsIndependente(jsonIcs); input.value = ''; });
 }
 
 function renderRelacao(){
@@ -1303,14 +1126,6 @@ function renderRelacao(){
       <td>${item.obs || '—'}</td>
     </tr>
   `).join('');
-}
-
-function importarIcs(input){
-  if(!input.files.length) return;
-  lerArquivo(input.files[0], jsonIcs => {
-    processarIcsIndependente(jsonIcs);
-    input.value = '';
-  });
 }
 
 function renderIcs(){
@@ -1367,23 +1182,20 @@ function importarArmazem(input){
     });
     const statusArmazem = document.getElementById('statusArmazem');
     if(statusArmazem) statusArmazem.textContent = STORE.armazem.length + ' posições vazias e ativas importadas.';
-    toast('Armazém importado com sucesso!', 'success');
+    toast('Armazém importado: ' + STORE.armazem.length + ' posições','success');
     input.value = '';
   });
 }
-
 function normalizarEndereco(e){
   let s = e.replace(/[^A-Z0-9]/g,'');
   if(s.length === 11 && s.startsWith('PP')) return s;
   if(s.startsWith('PP') && s.length >= 11) return s.substring(0,11);
   return null;
 }
-
 function derivarLado(endereco){
   const prefixo = parseInt(endereco.substring(9,11), 10);
   return (prefixo % 2 === 0) ? 'PAR' : 'IMPAR';
 }
-
 function processarDadosEstoqueLocal(json){
   if(!json.length) return;
   STORE.estoqueLocalRaw = json;
@@ -1403,7 +1215,6 @@ function processarDadosEstoqueLocal(json){
     });
   });
 }
-
 function importarEstoqueLocalInicial(input) {
   if(!input.files.length) return;
   lerArquivo(input.files[0], json => {
@@ -1415,18 +1226,13 @@ function importarEstoqueLocalInicial(input) {
     input.value = '';
   });
 }
-
 function importarEstoquePosSubida(input) {
   if (!input.files.length) return;
   lerArquivo(input.files[0], json => {
-    if (!json.length) {
-      toast('O arquivo enviado está vazio.', 'error');
-      input.value = '';
-      return;
-    }
+    if (!json.length) { toast('O arquivo enviado está vazio.', 'error'); input.value = ''; return; }
     processarDadosEstoqueLocal(json);
     gerarValidacaoFinal();
-    toast('Estoque atualizado com sucesso!', 'success');
+    toast('Estoque atualizado e Validação Final realizada com sucesso!', 'success');
     input.value = '';
   });
 }
@@ -1439,11 +1245,9 @@ function executarAlocacao(){
   let posicoes = STORE.armazem.filter(a => a.rua === rua);
   if(ladoSel) posicoes = posicoes.filter(a => a.lado === ladoSel);
   
-  const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
   const porPallet = {};
   
   STORE.ics.forEach(r => {
-    if(lotesComErro.has(normLote(r.lote))) return;
     if(!porPallet[r.pallet]) porPallet[r.pallet] = [];
     porPallet[r.pallet].push(r);
   });
@@ -1481,15 +1285,14 @@ function executarAlocacao(){
           STORE.alocacao.push({produto: r.produto, awb: r.awb, lote: r.lote, pallet: r.pallet, categoria: item.cat, endereco: enderecoAlocado});
         });
       });
-      renderAlocacao(); gerarEntrada(); gerarPalletEndereco(); gerarValidacaoFinal();
+      renderAlocacao(); atualizarProcessosSubsequentes();
       toast('Alocação concluída!', 'success');
     });
   } else {
-    renderAlocacao(); gerarEntrada(); gerarPalletEndereco(); gerarValidacaoFinal();
+    renderAlocacao(); atualizarProcessosSubsequentes();
     toast('Alocação executada com sucesso!', 'success');
   }
 }
-
 function renderAlocacao(){
   const selPallet = document.getElementById('filtroPalletAloc');
   if(!selPallet) return;
@@ -1499,10 +1302,7 @@ function renderAlocacao(){
   selPallet.value = pallets.includes(atual) ? atual : '';
   const palletSel = selPallet.value;
   const tbody = document.getElementById('tbodyAlocacao');
-  
   let filtrados = STORE.alocacao.filter(r => !palletSel || norm(r.pallet) === norm(palletSel));
-  filtrados.sort((a, b) => norm(a.pallet).localeCompare(norm(b.pallet)));
-
   const cnt = document.getElementById('cntAlocacao');
   if(cnt) cnt.textContent = filtrados.length + ' registros';
   if(!tbody) return;
@@ -1513,58 +1313,24 @@ function renderAlocacao(){
       <td>${r.produto}</td>
       <td>${r.awb}</td>
       <td><strong>${r.lote}</strong></td>
-      <td><strong style="color: var(--primary);">${r.pallet}</strong></td>
+      <td>${r.pallet}</td>
       <td><span class="${r.endereco === 'SEM POSIÇÃO DISPONÍVEL' ? 'badge red' : ''}">${r.endereco}</span></td>
     </tr>
   `).join('');
 }
 
-function gerarEntrada(){
-  STORE.entrada = [];
-  const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
-  
-  STORE.alocacao.forEach(item => {
-    if(lotesComErro.has(normLote(item.lote))) return;
-    if(item.endereco && item.endereco !== 'SEM POSIÇÃO DISPONÍVEL'){
-      const itemIcs = STORE.ics.find(i => norm(i.lote) === norm(item.lote));
-      const nomeFantasiaIcs = itemIcs ? itemIcs.produto : item.produto;
-      if(!nomeFantasiaIcs) return;
-      const codObj = STORE.codigos.find(c => norm(c.nome) === norm(nomeFantasiaIcs));
-      if(!codObj || !codObj.codigo) return;
-      STORE.entrada.push({
-        Codigo: codObj.codigo,
-        Endereço: item.endereco,
-        Estoque: '1',
-        DataVencimento: '01/02/2200',
-        Awb: item.awb || ''
-      });
-    }
-  });
-  renderErros();
-}
-
 function gerarSaida(){
   STORE.saida = [];
-  const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
-  const awbsProcessadosSaida = new Set();
-  
   STORE.ics.forEach(item => {
-    if(lotesComErro.has(normLote(item.lote))) return;
     let awbIcs = norm(item.awb);
-    if(awbIcs && !awbsProcessadosSaida.has(awbIcs)){
-      const encontrados = STORE.estoqueLocal.filter(e => norm(e.awb) === awbIcs);
-      if(encontrados.length > 0){
-        const encontrado = encontrados[0];
-        awbsProcessadosSaida.add(awbIcs);
-        
+    if(awbIcs){
+      const encontrado = STORE.estoqueLocal.find(e => norm(e.awb) === awbIcs);
+      if(encontrado){
         let codigoCliente = '';    
         if(encontrado.produto) {
           const codNoEstoque = STORE.codigos.find(c => norm(c.codigo) === norm(encontrado.produto) || norm(c.nome) === norm(encontrado.produto));
-          if(codNoEstoque) {
-            codigoCliente = codNoEstoque.codigo;
-          } else if(/^\d+$/.test(encontrado.produto.trim())) {
-            codigoCliente = encontrado.produto.trim();
-          }
+          if(codNoEstoque) codigoCliente = codNoEstoque.codigo;
+          else if(/^\d+$/.test(encontrado.produto.trim())) codigoCliente = encontrado.produto.trim();
         }
 
         if(!codigoCliente) {
@@ -1573,66 +1339,23 @@ function gerarSaida(){
           else codigoCliente = encontrado.produto || item.produto || '—';
         }
 
-        STORE.saida.push({ 
-          Codigo: codigoCliente, 
-          Endereço: encontrado.local || '—', 
-          Estoque: '0', 
-          DataVencimento: '01/02/2200', 
-          Awb: awbIcs 
-        });
+        STORE.saida.push({ Codigo: codigoCliente, Endereço: encontrado.local || '—', Estoque: '0', DataVencimento: '01/02/2200', Awb: awbIcs });
       }
     }
   });
-
-  const enderecosAcumulo = ['DEV01010001']; 
-
-  STORE.estoqueLocal.forEach(est => {
-    let localNorm = norm(est.local);
-    if (enderecosAcumulo.includes(localNorm)) {
-      let awbEstoque = norm(est.awb);
-      if (awbEstoque && !awbsProcessadosSaida.has(awbEstoque)) {
-        awbsProcessadosSaida.add(awbEstoque);
-
-        let codigoCliente = '';
-        if (est.produto) {
-          const codNoEstoque = STORE.codigos.find(c => norm(c.codigo) === norm(est.produto) || norm(c.nome) === norm(est.produto));
-          if (codNoEstoque) {
-            codigoCliente = codNoEstoque.codigo;
-          } else if (/^\d+$/.test(est.produto.trim())) {
-            codigoCliente = est.produto.trim();
-          } else {
-            codigoCliente = est.produto.trim();
-          }
-        }
-
-        STORE.saida.push({
-          Codigo: codigoCliente || 'GERAL',
-          Endereço: est.local,
-          Estoque: '0',
-          DataVencimento: '01/02/2200',
-          Awb: awbEstoque
-        });
-      }
-    }
-  });
-
   renderSaida();
 }
-
 function renderSaida(){
   const buscaEl = document.getElementById('buscaSaida');
   const busca = buscaEl ? norm(buscaEl.value) : '';
   const tbody = document.getElementById('tbodySaida');
   const cnt = document.getElementById('cntSaida');
   if(!tbody) return;
-  
-  const filtrados = STORE.saida.filter(s => !busca || norm(s.Codigo).includes(busca) || norm(s.Awb).includes(busca) || norm(s.Endereço).includes(busca));
-  
+  const filtrados = STORE.saida.filter(s => !busca || norm(s.Codigo).includes(busca) || norm(s.Awb).includes(busca));
   if(cnt) cnt.textContent = filtrados.length + ' registros';
   if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="5">Nenhum registro de saída localizado.</td></tr>'; return; }
   tbody.innerHTML = filtrados.map(s => `<tr><td><strong>${s.Codigo}</strong></td><td>${s.Endereço}</td><td>${s.Estoque}</td><td>${s.DataVencimento}</td><td><strong>${s.Awb}</strong></td></tr>`).join('');
 }
-
 function baixarSaidaExcel(){
   if(!STORE.saida.length){ toast('Nenhum dado na aba Saída', 'warning'); return; }
   baixarExcel([{nome: 'Saida', data: STORE.saida}], 'saida_wms.xlsx');
@@ -1641,100 +1364,22 @@ function baixarSaidaExcel(){
 
 function gerarConcatenar(){
   STORE.concatenar = [];
-  const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
-  const awbsEntradaAdicionados = new Set();
-  const awbsSaidaAdicionados = new Set();
-  
   STORE.alocacao.forEach(item => {
-    if(lotesComErro.has(normLote(item.lote))) return;
     if(item.endereco && item.endereco !== 'SEM POSIÇÃO DISPONÍVEL'){
-      let awbNorm = norm(item.awb);
-      if(awbNorm && !awbsEntradaAdicionados.has(awbNorm)) {
-        awbsEntradaAdicionados.add(awbNorm);
-        
-        let codigoCliente = '';
-        const codObj = STORE.codigos.find(c => norm(c.nome) === norm(item.produto));
-        if(codObj) codigoCliente = codObj.codigo;
-        else codigoCliente = item.produto || 'GERAL';
-        
-        STORE.concatenar.push(formatarLinhaConcatenada({ 
-          codigo: codigoCliente, 
-          endereco: item.endereco, 
-          estoque: '1', 
-          dataVencimento: '01/02/2200', 
-          awb: item.awb || '' 
-        }));
-      }
+      let codigoCliente = '';
+      const codObj = STORE.codigos.find(c => norm(c.nome) === norm(item.produto));
+      if(codObj) codigoCliente = codObj.codigo;
+      else codigoCliente = item.produto || 'GERAL';
+      
+      STORE.concatenar.push(formatarLinhaConcatenada({ codigo: codigoCliente, endereco: item.endereco, estoque: '1', dataVencimento: '01/02/2200', awb: item.awb || '' }));
     }
   });
   
   STORE.saida.forEach(s => {
-    let awbNorm = norm(s.Awb);
-    if(awbNorm && !awbsSaidaAdicionados.has(awbNorm)) {
-      awbsSaidaAdicionados.add(awbNorm);
-      
-      STORE.concatenar.push(formatarLinhaConcatenada({ 
-        codigo: s.Codigo || '', 
-        endereco: s.Endereço || '', 
-        estoque: s.Estoque || '0', 
-        dataVencimento: s.DataVencimento || '01/02/2200', 
-        awb: s.Awb || '' 
-      }));
-    }
+    STORE.concatenar.push(formatarLinhaConcatenada({ codigo: s.Codigo || '', endereco: s.Endereço || '', estoque: s.Estoque || '0', dataVencimento: s.DataVencimento || '01/02/2200', awb: s.Awb || '' }));
   });
-  
   renderConcatenar();
 }
-
-function dispararDownloadFicheiro(conteudo, nomeFicheiro) {
-  const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = nomeFicheiro;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-}
-
-function baixarAmbosSaida() {
-  const dados = STORE.saida || STORE.concatenar;
-  if (!dados || dados.length === 0) {
-    toast('Nenhum dado disponível para gerar os ficheiros.', 'warning');
-    return;
-  }
-  
-  const itensEstoqueZero = dados.filter(item => {
-    const estoque = parseFloat(String(item.estoque || item.Estoque || 0).replace(',', '.'));
-    return isNaN(estoque) || estoque === 0;
-  });
-
-  if (itensEstoqueZero.length === 0) {
-    toast('Não existem registos com estoque 0 para exportar.', 'warning');
-    return;
-  }
-
-  const linhasFormatadas = itensEstoqueZero.map(item => {
-    const c = String(item.codigo || item.Codigo || '').padEnd(25, ' ');
-    const e = String(item.endereco || item.Endereco || '').padEnd(31, ' ');
-    const q = String(item.estoque || item.Estoque || '0').padEnd(10, ' ');
-    const d = String(item.dataVencimento || item.DataVencimento || '01/02/2200').padEnd(12, ' ');
-    const a = String(item.awb || item.Awb || '').padEnd(53, ' ');
-    return `${c}${e}${q}${d}${a}`;
-  });
-
-  const conteudoInvdet = linhasFormatadas.join('\r\n');
-  dispararDownloadFicheiro(conteudoInvdet, 'Saida.INVDET');
-
-  setTimeout(() => {
-    const enderecosUnicos = [...new Set(itensEstoqueZero.map(i => i.endereco || i.Endereco))].filter(Boolean);
-    const conteudoLocais = enderecosUnicos.join('\r\n');
-    dispararDownloadFicheiro(conteudoLocais, 'LOCAIS.TXT');
-    toast(`Sucesso! ${itensEstoqueZero.length} registos descarregados.`, 'success');
-  }, 300);
-}
-
 function formatarLinhaConcatenada(obj){
   const c = String(obj.codigo || '').padEnd(25, ' ');
   const e = String(obj.endereco || '').padEnd(31, ' ');
@@ -1743,7 +1388,6 @@ function formatarLinhaConcatenada(obj){
   const a = String(obj.awb || '').padEnd(53, ' ');
   return { texto: `${c}${e}${q}${d}${a}`, raw: obj };
 }
-
 function renderConcatenar(){
   const buscaEl = document.getElementById('buscaConcatenar');
   const busca = buscaEl ? norm(buscaEl.value) : '';
@@ -1752,13 +1396,9 @@ function renderConcatenar(){
   if(!tbody) return;
   const filtrados = STORE.concatenar.filter(item => !busca || norm(item.texto).includes(busca));
   if(cnt) cnt.textContent = filtrados.length + ' registros';
-  if(!filtrados.length){
-    tbody.innerHTML = '<tr><td>Nenhum registro concatenado.</td></tr>';
-    return;
-  }
+  if(!filtrados.length){ tbody.innerHTML = '<tr><td>Nenhum registro concatenado.</td></tr>'; return; }
   tbody.innerHTML = filtrados.map(item => `<tr><td><code style="font-family:monospace; font-size:.88rem; background:#0f172a; color:#f8fafc; padding:6px 10px; display:block; white-space:pre; border-radius:4px; border:1px solid rgba(255,255,255,0.05);">${item.texto}</code></td></tr>`).join('');
 }
-
 function baixarConcatenarTxt(){
   if(!STORE.concatenar.length) gerarConcatenar();
   if(!STORE.concatenar.length){ toast('Sem dados para gerar arquivo.', 'warning'); return; }
@@ -1771,7 +1411,6 @@ function baixarConcatenarTxt(){
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   toast('Arquivo gerado com sucesso!', 'success');
 }
-
 function baixarLocaisTxt(){
   if(!STORE.concatenar.length) gerarConcatenar();
   const locais = STORE.concatenar.map(item => item.raw.endereco).filter(Boolean).join('\n');
@@ -1784,71 +1423,70 @@ function baixarLocaisTxt(){
 
 function gerarPalletEndereco(){
   STORE.palletEndereco = [];
-  const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
   const mapa = new Map();
-  
   STORE.alocacao.forEach(item => {
-    if(lotesComErro.has(normLote(item.lote))) return;
-    if(item.pallet && item.endereco && item.endereco !== 'SEM POSIÇÃO DISPONÍVEL' && !mapa.has(item.pallet)){
-      mapa.set(item.pallet, item.endereco);
+    let pVal = item.pallet || item.pallete || item.palete || '';
+    if(!pVal && item.lote) {
+      const matchIcs = STORE.ics.find(i => normLote(i.lote) === normLote(item.lote));
+      if(matchIcs) pVal = matchIcs.pallet || matchIcs.pallete || matchIcs.palete || '';
+    }
+    pVal = String(pVal).trim();
+    if(pVal && item.endereco && item.endereco !== 'SEM POSIÇÃO DISPONÍVEL' && !mapa.has(pVal)){
+      mapa.set(pVal, item.endereco);
     }
   });
   mapa.forEach((endereco, pallet) => STORE.palletEndereco.push({ pallet, endereco }));
   renderPalletEndereco();
 }
-
 function renderPalletEndereco(){
   const buscaEl = document.getElementById('buscaPalletEndereco');
   const busca = buscaEl ? norm(buscaEl.value) : '';
   const tbody = document.getElementById('tbodyPalletEndereco');
-  const cnt = document.getElementById('cntPalletEndereco');
   if(!tbody) return;
   const filtrados = STORE.palletEndereco.filter(item => !busca || norm(item.pallet).includes(busca) || norm(item.endereco).includes(busca));
+  const cnt = document.getElementById('cntPalletEndereco');
   if(cnt) cnt.textContent = filtrados.length + ' registros';
-  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="2">Nenhum registro encontrado.</td></tr>'; return; }
+  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="2">Nenhum dado encontrado.</td></tr>'; return; }
   tbody.innerHTML = filtrados.map(item => `<tr><td><strong>${item.pallet}</strong></td><td>${item.endereco}</td></tr>`).join('');
 }
-
-function copiarTabelaOutlook(){
-  const tabela = document.getElementById('tabelaPalletEnderecoVisual');
-  if(!tabela || !STORE.palletEndereco.length){ toast('Nenhum dado para copiar', 'warning'); return; }
-  const range = document.createRange();
-  range.selectNode(tabela);
-  window.getSelection().removeAllRanges();
-  window.getSelection().addRange(range);
-  try {
-    document.execCommand('copy');
-    window.getSelection().removeAllRanges();
-    toast('Copiado para a área de transferência!', 'success');
-  } catch(e) {
-    toast('Erro ao copiar tabela', 'error');
-  }
+function copiarTabelaOutlook() {
+  if(!STORE.palletEndereco.length) gerarPalletEndereco();
+  if(!STORE.palletEndereco.length){ toast('Não há dados para copiar.', 'warning'); return; }
+  let htmlTable = `<table border="1" cellspacing="0" cellpadding="5" style="border-collapse:collapse;font-family:Arial;font-size:11pt;"><tr style="background:#f2f2f2;"><th>PALLET</th><th>ENDEREÇO</th></tr>`;
+  STORE.palletEndereco.forEach(i => htmlTable += `<tr><td>${i.pallet}</td><td>${i.endereco}</td></tr>`);
+  htmlTable += `</table>`;
+  navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([htmlTable], { type: 'text/html' }), 'text/plain': new Blob([STORE.palletEndereco.map(i => `${i.pallet}\t${i.endereco}`).join('\n')], { type: 'text/plain' }) })]).then(() => {
+    toast('Tabela copiada com sucesso para o Outlook!', 'success');
+  }).catch(err => toast('Erro ao copiar', 'error'));
 }
 
-function gerarValidacaoFinal(){
+function gerarValidacaoFinal() {
   STORE.validacaoFinal = [];
-  const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
+  if (!STORE.alocacao || STORE.alocacao.length === 0) { renderValidacaoFinal(); return; }
   
-  STORE.alocacao.forEach(item => {
-    if(lotesComErro.has(normLote(item.lote))) return;
-    if(item.endereco && item.endereco !== 'SEM POSIÇÃO DISPONÍVEL'){
-      const estNoSenior = STORE.estoqueLocal.find(e => norm(e.awb) === norm(item.awb));
-      const enderecoSenior = estNoSenior ? estNoSenior.local : 'NÃO ENCONTRADO';
-      const status = (enderecoSenior === item.endereco) ? 'SUBIU' : 'NAO_SUBIU';
-      
-      STORE.validacaoFinal.push({
-        awb: item.awb,
-        lote: item.lote,
-        enderecoPlanejado: item.endereco,
-        enderecoSenior: enderecoSenior,
-        status: status
-      });
+  STORE.alocacao.forEach(itemAloc => {
+    if (!itemAloc || !itemAloc.awb || itemAloc.endereco === 'SEM POSIÇÃO DISPONÍVEL') return;
+    const awbProcurado = norm(itemAloc.awb);
+    const itensEstoque = STORE.estoqueLocal.filter(e => norm(e.awb) === awbProcurado);
+    
+    let enderecoSenior = '—';
+    let statusValidacao = 'Fora do Senior';
+
+    if (itensEstoque.length > 0) {
+      const itemMaisRecente = itensEstoque[itensEstoque.length - 1];
+      const itemCorrespondente = itensEstoque.find(e => norm(e.local) === norm(itemAloc.endereco));
+      const itemFinal = itemCorrespondente || itemMaisRecente;
+      enderecoSenior = itemFinal.local;
+
+      if (norm(enderecoSenior) === norm(itemAloc.endereco)) statusValidacao = 'No senior';
+      else statusValidacao = 'Divergência de Endereço no Senior';
     }
+
+    STORE.validacaoFinal.push({ awb: itemAloc.awb, lote: itemAloc.lote || '—', enderecoPlanejado: itemAloc.endereco, enderecoSenior: enderecoSenior, status: statusValidacao });
   });
   renderValidacaoFinal();
 }
-
-function renderValidacaoFinal(){
+function renderValidacaoFinal() {
   const buscaEl = document.getElementById('buscaValidacaoFinal');
   const busca = buscaEl ? norm(buscaEl.value) : '';
   const selStatus = document.getElementById('filtroStatusValidacao');
@@ -1857,66 +1495,75 @@ function renderValidacaoFinal(){
   const cnt = document.getElementById('cntValidacaoFinal');
   if(!tbody) return;
   
-  let filtrados = STORE.validacaoFinal;
-  if(statusFiltro) filtrados = filtrados.filter(v => v.status === statusFiltro);
-  if(busca) filtrados = filtrados.filter(v => norm(v.awb).includes(busca) || norm(v.lote).includes(busca) || norm(v.enderecoPlanejado).includes(busca));
+  let filtrados = STORE.validacaoFinal.filter(v => !busca || norm(v.awb).includes(busca) || norm(v.lote).includes(busca) || norm(v.status).includes(busca));
+  if (statusFiltro === 'NAO_SUBIU') filtrados = filtrados.filter(v => norm(v.status).includes('FORA DO SENIOR') || norm(v.status).includes('DIVERGENCIA'));
+  else if (statusFiltro === 'SUBIU') filtrados = filtrados.filter(v => norm(v.status).includes('NO SENIOR'));
   
   if(cnt) cnt.textContent = filtrados.length + ' registros';
-  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Nenhum registro de validação.</td></tr>'; return; }
+  if(!filtrados.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Nenhuma validação executada ou registros não encontrados.</td></tr>'; return; }
   
   tbody.innerHTML = filtrados.map(v => {
-    const badgeStyle = v.status === 'SUBIU' ? 'background:rgba(22,163,74,0.15);color:#4ade80;padding:3px 8px;border-radius:4px;' : 'background:rgba(220,38,38,0.15);color:#f87171;padding:3px 8px;border-radius:4px;';
-    const statusTexto = v.status === 'SUBIU' ? 'No senior' : 'Fora do senior';
+    let textoStatus = v.status || 'Fora do Senior';
+    let estilocss = norm(textoStatus).includes('NO SENIOR') && !norm(textoStatus).includes('FORA') ? 'color: #00ff66; text-shadow: 0 0 8px rgba(0, 255, 102, 0.8); font-weight: 800;' : 'color: #ff3333; text-shadow: 0 0 8px rgba(255, 51, 51, 0.8); font-weight: 800;';
     return `<tr>
       <td><strong>${v.awb}</strong></td>
       <td>${v.lote}</td>
       <td>${v.enderecoPlanejado}</td>
-      <td>${v.enderecoSenior}</td>
-      <td><span style="${badgeStyle} font-weight:700;">${statusTexto}</span></td>
+      <td><strong>${v.enderecoSenior}</strong></td>
+      <td><span style="${estilocss}">${textoStatus}</span></td>
     </tr>`;
   }).join('');
 }
-
-function baixarValidacaoFinalExcel(){
-  if(!STORE.validacaoFinal.length){ toast('Nenhum dado para baixar', 'warning'); return; }
-  const dados = STORE.validacaoFinal.map(v => ({
-    "AWB": v.awb,
-    "LOTE": v.lote,
-    "ENDEREÇO PLANEJADO": v.enderecoPlanejado,
-    "ENDEREÇO NO SENIOR": v.enderecoSenior,
-    "STATUS": v.status === 'SUBIU' ? 'No senior' : 'Fora do senior'
-  }));
-  baixarExcel([{nome: "Validacao Final", data: dados}], "relatorio_validacao_final.xlsx");
-  toast('Relatório baixado com sucesso!', 'success');
+function baixarValidacaoFinalExcel() {
+  if(!STORE.validacaoFinal.length) { toast('Nenhum dado de validação para baixar.', 'warning'); return; }
+  const dados = STORE.validacaoFinal.map(v => ({ "AWB": v.awb, "LOTE": v.lote, "ENDEREÇO PLANEJADO": v.enderecoPlanejado, "ENDEREÇO NO SENIOR": v.enderecoSenior, "STATUS DA VALIDAÇÃO": v.status }));
+  baixarExcel([{ nome: "Validacao Final", data: dados }], "relatorio_validacao_final.xlsx");
+  toast('Relatório de Validação Final baixado com sucesso!', 'success');
 }
 
-function salvarHistorico(){
-  const dadosGerais = {
-    codigos: STORE.codigos,
-    ics: STORE.ics,
-    relacao: STORE.relacao,
-    alocacao: STORE.alocacao,
-    erros: STORE.erros
-  };
-  const blob = new Blob([JSON.stringify(dadosGerais, null, 2)], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'historico_wms.json';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-  toast('Histórico salvo com sucesso!', 'success');
+function salvarHistorico() {
+  const abasParaExcel = [
+    { nome: "Relacao", data: STORE.relacao.length ? STORE.relacao : [{ Status: "Sem dados" }] },
+    { nome: "ICS", data: STORE.ics.length ? STORE.ics : [{ Status: "Sem dados" }] },
+    { nome: "Armazem", data: STORE.armazem.length ? STORE.armazem : [{ Status: "Sem dados" }] },
+    { nome: "Alocacao", data: STORE.alocacao.length ? STORE.alocacao : [{ Status: "Sem dados" }] },
+    { nome: "EstoqueLocal", data: STORE.estoqueLocal.length ? STORE.estoqueLocal : [{ Status: "Sem dados" }] },
+    { nome: "Saida", data: STORE.saida.length ? STORE.saida : [{ Status: "Sem dados" }] },
+    { nome: "CodigosClientes", data: STORE.codigos.length ? STORE.codigos : [{ Status: "Sem dados" }] },
+    { nome: "ValidacaoFinal", data: STORE.validacaoFinal.length ? STORE.validacaoFinal : [{ Status: "Sem dados" }] }
+  ];
+  baixarExcel(abasParaExcel, "historico_wms_completo.xlsx");
+  
+  const estadoGeral = { relacao: STORE.relacao, ics: STORE.ics, armazem: STORE.armazem, alocacao: STORE.alocacao, estoqueLocal: STORE.estoqueLocal, saida: STORE.saida, concatenar: STORE.concatenar, codigos: STORE.codigos, erros: STORE.erros, palletEndereco: STORE.palletEndereco, validacaoFinal: STORE.validacaoFinal };
+  localStorage.setItem('wms_backup_geral', JSON.stringify(estadoGeral));
+  toast('Histórico salvo e arquivo Excel baixado com sucesso!', 'success');
 }
-
-function confirmarZerar(){
-  abrirModal('Reiniciar Sistema', 'Tem certeza que deseja apagar todos os dados e reiniciar?', '🗑️', () => {
-    localStorage.removeItem(LS_KEY);
-    location.reload();
+function confirmarZerar() {
+  abrirModal('Zerar Sistema', 'Tem certeza que deseja apagar todos os dados e reiniciar o sistema?', '🗑️', () => {
+    localStorage.removeItem('wms_backup_geral');
+    Object.keys(STORE).forEach(k => STORE[k] = []);
+    carregarCodigos();
+    renderRelacao(); renderIcs(); renderAlocacao(); renderSaida(); renderConcatenar(); renderPalletEndereco(); renderCodigos(); renderValidacaoFinal(); renderErros();
+    toast('Sistema zerado com sucesso.', 'info');
   });
 }
 
-window.onload = () => {
+document.addEventListener('DOMContentLoaded', () => {
   carregarCodigos();
-  carregarErros();
-  abrirModalInicio();
-};
+  atualizarBadgeErros();
+  try {
+    const backup = localStorage.getItem('wms_backup_geral');
+    if(backup) {
+      const dados = JSON.parse(backup);
+      Object.keys(dados).forEach(k => { if(STORE[k] !== undefined) STORE[k] = dados[k]; });
+      renderRelacao(); renderIcs(); renderAlocacao(); renderSaida(); renderConcatenar(); renderPalletEndereco(); renderCodigos(); renderValidacaoFinal(); renderErros();
+    }
+  } catch(e) {}
+
+  if(!STORE.armazem.length || !STORE.estoqueLocal.length) {
+    abrirModalInicio();
+  }
+});
 </script>
 </body>
 </html>
