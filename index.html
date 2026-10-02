@@ -6,7 +6,6 @@
 <title>Sistema WMS - Gestão de Armazém e Posições</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
-/* --- ESTILOS (Index.css) --- */
 :root {
   --bg: #0b0f19;
   --surface: #131b2e;
@@ -192,6 +191,11 @@ tr:hover td { background: #1a2538; }
   border-left: 1px solid var(--border);
 }
 
+#panel-erros .table-container, #panel-erros .panel-body, .tabela-erros-wrapper {
+  flex: 1;
+  overflow-y: auto !important;
+}
+
 #panel-erros.show, .panel.show { transform: translateX(0) !important; }
 
 .panel header { 
@@ -314,9 +318,9 @@ tr:hover td { background: #1a2538; }
   <h1><span class="logo">📦</span> Devolução - Gestão de Pallets e armazém.</h1>
   <button class="hbtn" onclick="abrirPainel('erros')">🚨 Erros<span class="badge" id="badgeErros" style="background:#ef4444;color:#fff;border-radius:999px;font-size:.68rem;padding:1px 7px;font-weight:700;">0</span></button>
   <button class="hbtn success" onclick="salvarHistorico()">💾 Baixar Historico </button>
-  <button class="hbtn danger" onclick="confirmarZerar()">🗑️️ Reiniciar </button>
+  <button class="hbtn danger" onclick="confirmarZerar()">🗑️ Reiniciar </button>
   <button class="hbtn" onclick="abrirModalInicio()">📥 </button>
-  <button class="hbtn" onclick="abrirPainel('codigos')">⚙️ Códigos Clientes<span class="badge" id="badgeCodigos">0</span></button>
+  <button class="hbtn" onclick="abrirPainel('codigos')">⚙️ Códidos Clientes<span class="badge" id="badgeCodigos">0</span></button>
 </header>
 <nav id="mainNav">
   <button class="active" data-tab="relacao" onclick="mudarAba('relacao')">📋 Relação</button>
@@ -565,7 +569,7 @@ tr:hover td { background: #1a2538; }
         <option value="">Todas as categorias</option>
       </select>
       <button class="btn amber sm" onclick="baixarErrosExcel()">📥 Baixar (Excel)</button>
-      <button class="btn red sm" onclick="confirmarLimparErros()">🗑️️ Limpar Erros</button>
+      <button class="btn red sm" onclick="confirmarLimparErros()">🗑️ Limpar Erros</button>
     </div>
     <div class="table-wrap">
       <table>
@@ -587,9 +591,9 @@ tr:hover td { background: #1a2538; }
 </aside>
 
 <script>
-/* --- SCRIPTS (Index.js) --- */
+// --- SCRIPT WMS INTEGRADO ---
 document.addEventListener('click', function unlockAudio() {
-  try { const audioTest = new Audio(); audioTest.play().catch(() => {}); } catch (e) {}
+try { const audioTest = new Audio(); audioTest.play().catch(() => {}); } catch (e) {}
 }, { once: true });
 
 const LS_KEY = 'wms_codigos_clientes';
@@ -733,7 +737,7 @@ let modalCallback = null;
 function abrirModal(title, msg, icon, cb){
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalMsg').textContent = msg;
-  document.getElementById('modalIcon').textContent = icon || '⚠';
+  document.getElementById('modalIcon').textContent = icon || '⚠️';
   modalCallback = cb;
   document.getElementById('modalConfirm').classList.add('show');
 }
@@ -755,30 +759,18 @@ function mudarAba(nome){
   const tabEl = document.getElementById('tab-'+nome);
   if(tabEl) tabEl.classList.add('active');
   document.querySelectorAll('#mainNav button').forEach(b => b.classList.toggle('active', b.dataset.tab === nome));
-  
-  // Garante que os dados são gerados ou recalculados ao entrar em cada aba
-  if(nome === 'alocacao') {
-    if(STORE.alocacao.length === 0 && STORE.ics.length > 0 && STORE.armazem.length > 0) executarAlocacaoSilenciosa();
-    renderAlocacao();
-  }
-  if(nome === 'saida') { gerarSaida(); renderSaida(); }
-  if(nome === 'concatenar') { gerarConcatenar(); renderConcatenar(); }
-  if(nome === 'pallet-endereco') { gerarPalletEndereco(); renderPalletEndereco(); }
-  if(nome === 'validacao-final') { gerarValidacaoFinal(); renderValidacaoFinal(); }
+  if(nome === 'saida') gerarSaida();
+  if(nome === 'entrada') gerarEntrada();
+  if(nome === 'concatenar') gerarConcatenar();
+  if(nome === 'pallet-endereco') gerarPalletEndereco();
+  if(nome === 'validacao-final') gerarValidacaoFinal();
 }
-  
 function abrirPainel(nome){
   document.getElementById('panel-'+nome).classList.add('show');
   document.getElementById('overlay-'+nome).classList.add('show');
   if(nome === 'codigos') renderCodigos();
   if(nome === 'erros') renderErros();
 }
-
-function fecharPainel(nome){
-  document.getElementById('panel-'+nome).classList.remove('show');
-  document.getElementById('overlay-'+nome).classList.remove('show');
-}
-
 function baixarCodigosExcel() {
   if (!STORE.codigos || STORE.codigos.length === 0) {
     toast('Não há códigos cadastrados para exportar.', 'warning');
@@ -791,16 +783,10 @@ function baixarCodigosExcel() {
   baixarExcel([{ nome: "Codigos Clientes", data: dadosParaExportar }], "codigos_clientes.xlsx");
   toast('Arquivo de códigos baixado com sucesso!', 'success');
 }
-
-function confirmarLimparCodigos() {
-  abrirModal('Excluir Códigos', 'Tem certeza que deseja apagar todos os códigos de clientes cadastrados?', '🗑️', () => {
-    STORE.codigos = [];
-    salvarCodigos();
-    renderCodigos();
-    toast('Códigos limpos com sucesso!', 'success');
-  });
+function fecharPainel(nome){
+  document.getElementById('panel-'+nome).classList.remove('show');
+  document.getElementById('overlay-'+nome).classList.remove('show');
 }
-
 function atualizarOpcoesLadoPorRua() {
   const selRua = document.getElementById('alocRua');
   const selLado = document.getElementById('alocLado');
@@ -812,21 +798,17 @@ function atualizarOpcoesLadoPorRua() {
     selLado.innerHTML = '<option value="">Todos</option><option value="PAR">PAR</option><option value="IMPAR">ÍMPAR</option>';
   }
 }
-
 function atualizarProcessosSubsequentes() {
-  try {
-    if (typeof executarAlocacaoSilenciosa === 'function' && STORE.armazem.length > 0 && STORE.ics.length > 0) {
-      executarAlocacaoSilenciosa();
-    }
-    if (typeof gerarSaida === 'function') gerarSaida();
-    if (typeof gerarConcatenar === 'function') gerarConcatenar();
-    if (typeof gerarPalletEndereco === 'function') gerarPalletEndereco();
-    if (typeof gerarValidacaoFinal === 'function') gerarValidacaoFinal();
-  } catch (err) {
-    console.error("Erro ao atualizar processos subsequentes:", err);
+  if (STORE.armazem && STORE.armazem.length > 0 && STORE.ics && STORE.ics.length > 0) {
+    executarAlocacaoSilenciosa();
+  } else {
+    gerarEntrada();
+    gerarSaida();
+    gerarConcatenar();
+    gerarPalletEndereco();
+    gerarValidacaoFinal();
   }
 }
-
 function carregarCodigos(){
   try{
     STORE.codigos = JSON.parse(localStorage.getItem(LS_KEY)) || [];
@@ -835,17 +817,14 @@ function carregarCodigos(){
   }
   atualizarBadgeCodigos();
 }
-
 function salvarCodigos(){
   localStorage.setItem(LS_KEY, JSON.stringify(STORE.codigos));
   atualizarBadgeCodigos();
 }
-
 function atualizarBadgeCodigos(){
   const badge = document.getElementById('badgeCodigos');
   if(badge) badge.textContent = STORE.codigos.length;
 }
-
 function adicionarCodigo(){
   const c = norm(document.getElementById('novoCodigo').value);
   const n = String(document.getElementById('novoNome').value).trim();
@@ -858,12 +837,16 @@ function adicionarCodigo(){
   document.getElementById('novoNome').value = '';
   toast('Código adicionado e processo atualizado!','success');
 }
-
 function removerCodigo(i){
   STORE.codigos.splice(i, 1); 
   salvarCodigos(); 
   renderCodigos(); 
-  toast('Código removido','info');
+}
+
+function confirmarLimparCodigos() {
+  STORE.codigos = []; 
+  salvarCodigos(); 
+  renderCodigos(); 
 }
 
 function confirmarLimparErros(){
@@ -892,7 +875,6 @@ function importarCodigos(input){
     input.value = '';
   });
 }
-
 function reprocessarAposAtualizarCodigos() {
   if (STORE.erros && STORE.erros.length > 0) {
     STORE.erros = STORE.erros.filter(e => {
@@ -995,35 +977,14 @@ function processarIcsIndependenteSilencioso(jsonIcs) {
   }
 }
 
-function executarAlocacao() {
-  if (!STORE.armazem.length) {
-    toast('Importe o armazém antes de executar a alocação.', 'warning');
-    return;
-  }
-  if (!STORE.ics.length) {
-    toast('Importe o arquivo ICS antes de executar a alocação.', 'warning');
-    return;
-  }
-  executarAlocacaoSilenciosa();
-  renderAlocacao();
-  atualizarProcessosSubsequentes();
-  toast('Alocação automática executada com sucesso!', 'success');
-}
-
 function executarAlocacaoSilenciosa() {
   const rua = document.getElementById('alocRua') ? document.getElementById('alocRua').value : '01';
   let posicoes = STORE.armazem.filter(a => a.rua === rua);
-  
-  const lotesBloqueados = new Set(
-    STORE.erros
-      .filter(e => e.categoria === 'LOTE DUPLICADO')
-      .map(e => normLote(e.lote))
-  );
-  
+  const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
   const porPallet = {};
   
   STORE.ics.forEach(r => {
-    if (lotesBloqueados.has(normLote(r.lote))) return; 
+    if (lotesComErro.has(normLote(r.lote))) return; 
     let chavePallet = (r.pallet && r.pallet !== 'N/A' && r.pallet !== '—') ? norm(r.pallet) : `AWB_${r.awb}_${r.lote}`;
     if (!porPallet[chavePallet]) porPallet[chavePallet] = [];
     porPallet[chavePallet].push(r);
@@ -1036,12 +997,8 @@ function executarAlocacaoSilenciosa() {
     const registros = porPallet[pallet];
     if(registros.length === 0) return;
     const cat = registros[0].categoria;
-    
-    // Tenta achar pela categoria exata; se não encontrar ou se for '—', pega a primeira disponível na rua
-    let pos = posicoes.find(p => !usadas.has(p.endereco) && cat && cat !== '—' && p.categoria === cat);
-    if(!pos) {
-      pos = posicoes.find(p => !usadas.has(p.endereco));
-    }
+    let pos = posicoes.find(p => !usadas.has(p.endereco) && p.categoria === cat);
+    if(!pos) pos = posicoes.find(p => !usadas.has(p.endereco));
     
     if(pos) {
       usadas.add(pos.endereco);
@@ -1051,7 +1008,7 @@ function executarAlocacaoSilenciosa() {
           awb: r.awb, 
           lote: r.lote, 
           pallet: r.pallet, 
-          categoria: cat && cat !== '—' ? cat : pos.categoria, 
+          categoria: cat, 
           endereco: pos.endereco
         });
       });
@@ -1081,7 +1038,6 @@ function renderCodigos(){
     return `<tr><td><strong>${c.codigo}</strong></td><td>${c.nome}</td><td><button class="btn red sm" onclick="removerCodigo(${i})">🗑️</button></td></tr>`;
   }).join('');
 }
-
 function carregarErros(){ STORE.erros = []; atualizarBadgeErros(); renderErros(); }
 function salvarErros(){ atualizarBadgeErros(); }
 
@@ -1094,7 +1050,6 @@ function atualizarBadgeErros(){
     else btnHeader.classList.remove('btn-piscando');
   }
 }
-
 function registrarErro(categoria, mensagem, pallet, lote='', awb='', produto=''){
   categoria = String(categoria || 'GERAL').trim();
   mensagem = String(mensagem || '').trim();
@@ -1112,17 +1067,11 @@ function renderErros(){
   const busca = buscaEl ? norm(buscaEl.value) : '';
   const selCat = document.getElementById('filtroCatErros');
   const catAtual = selCat ? selCat.value : '';
-  
-  const categoriasPadrao = [
-    'LOTE DUPLICADO', 
-    'LOTE NAO LOCALIZADO NO ICS', 
-    'DEVOLVER, CADASTRAR NO SENIOR', 
-    'FORMATAÇÃO'
-  ];
+  const categoriasPadrao = ['LOTE DUPLICADO', 'LOTE NAO LOCALIZADO NO ICS', 'DEVOLVER, CADASTRAR NO SENIOR', 'FORMATAÇÃO'];
   
   if(selCat){
-    selCat.innerHTML = '<option value="">Todas as categorias</option>' + 
-      categoriasPadrao.map(c => `<option value="${c}" ${c === catAtual ? 'selected' : ''}>${c}</option>`).join('');
+    selCat.innerHTML = '<option value="">Todas as categorias</option>' + categoriasPadrao.map(c => `<option>${c}</option>`).join('');
+    selCat.value = categoriasPadrao.includes(catAtual) ? catAtual : '';
   }
   
   let filtrados = catAtual ? STORE.erros.filter(e => e.categoria === catAtual) : STORE.erros;
@@ -1189,6 +1138,7 @@ function baixarErrosExcel() {
   const busca = buscaEl ? norm(buscaEl.value) : '';
   const selCat = document.getElementById('filtroCatErros');
   const catAtual = selCat ? selCat.value : '';
+  const categoriasPadrao = ['LOTE DUPLICADO', 'LOTE NAO LOCALIZADO NO ICS', 'DEVOLVER, CADASTRAR NO SENIOR', 'FORMATAÇÃO'];
   
   let filtrados = catAtual ? STORE.erros.filter(e => e.categoria === catAtual) : STORE.erros;
   if(busca) {
@@ -1417,7 +1367,7 @@ function importarArmazem(input){
     });
     const statusArmazem = document.getElementById('statusArmazem');
     if(statusArmazem) statusArmazem.textContent = STORE.armazem.length + ' posições vazias e ativas importadas.';
-    toast('Armazém importado com sucesso','success');
+    toast('Armazém importado com sucesso!', 'success');
     input.value = '';
   });
 }
@@ -1481,44 +1431,83 @@ function importarEstoquePosSubida(input) {
   });
 }
 
+function executarAlocacao(){
+  if(!STORE.armazem.length){ toast('Importe o Armazém antes de alocar','warning'); abrirModalInicio(); return; }
+  const rua = document.getElementById('alocRua').value;
+  let ladoSel = document.getElementById('alocLado').value;
+  if(rua === '02' && ladoSel === 'PAR') ladoSel = '';
+  let posicoes = STORE.armazem.filter(a => a.rua === rua);
+  if(ladoSel) posicoes = posicoes.filter(a => a.lado === ladoSel);
+  
+  const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
+  const porPallet = {};
+  
+  STORE.ics.forEach(r => {
+    if(lotesComErro.has(normLote(r.lote))) return;
+    if(!porPallet[r.pallet]) porPallet[r.pallet] = [];
+    porPallet[r.pallet].push(r);
+  });
+  
+  const usadas = new Set();
+  STORE.alocacao = [];
+  let palletsRestantes = [];
+  
+  Object.keys(porPallet).forEach(pallet => {
+    const registros = porPallet[pallet];
+    if(registros.length === 0) return;
+    const cat = registros[0].categoria;
+    let pos = posicoes.find(p => !usadas.has(p.endereco) && p.categoria === cat);
+    if(!pos) pos = posicoes.find(p => !usadas.has(p.endereco));
+    if(pos) {
+      usadas.add(pos.endereco);
+      registros.forEach(r => {
+        STORE.alocacao.push({produto: r.produto, awb: r.awb, lote: r.lote, pallet: r.pallet, categoria: cat, endereco: pos.endereco});
+      });
+    } else {
+      palletsRestantes.push({pallet, registros, cat});
+    }
+  });
+  
+  if(palletsRestantes.length > 0 && ladoSel) {
+    const ladoOposto = ladoSel === 'IMPAR' ? 'PAR' : 'IMPAR';
+    abrirModal('Endereços esgotados', `Deseja alocar o restante no lado ${ladoOposto} da rua ${rua}?`, '⚠️', () => {
+      let posicoesOpostas = STORE.armazem.filter(a => a.rua === rua && a.lado === ladoOposto);
+      palletsRestantes.forEach(item => {
+        let pos = posicoesOpostas.find(p => !usadas.has(p.endereco) && p.categoria === item.cat);
+        if(!pos) pos = posicoesOpostas.find(p => !usadas.has(p.endereco));
+        const enderecoAlocado = pos ? pos.endereco : 'SEM POSIÇÃO DISPONÍVEL';
+        if(pos) usadas.add(pos.endereco);
+        item.registros.forEach(r => {
+          STORE.alocacao.push({produto: r.produto, awb: r.awb, lote: r.lote, pallet: r.pallet, categoria: item.cat, endereco: enderecoAlocado});
+        });
+      });
+      renderAlocacao(); gerarEntrada(); gerarPalletEndereco(); gerarValidacaoFinal();
+      toast('Alocação concluída!', 'success');
+    });
+  } else {
+    renderAlocacao(); gerarEntrada(); gerarPalletEndereco(); gerarValidacaoFinal();
+    toast('Alocação executada com sucesso!', 'success');
+  }
+}
+
 function renderAlocacao(){
   const selPallet = document.getElementById('filtroPalletAloc');
-  const selRua = document.getElementById('alocRua');
-  const selLado = document.getElementById('alocLado');
-  
   if(!selPallet) return;
-  
   const atual = selPallet.value;
   const pallets = [...new Set(STORE.alocacao.map(r => r.pallet).filter(Boolean))].sort();
   selPallet.innerHTML = '<option value="">Todos</option>' + pallets.map(p => `<option value="${p}">${p}</option>`).join('');
   selPallet.value = pallets.includes(atual) ? atual : '';
   const palletSel = selPallet.value;
-  
-  const ruaSel = selRua ? selRua.value : '';
-  const ladoSel = selLado ? selLado.value : '';
-  
   const tbody = document.getElementById('tbodyAlocacao');
   
-  let filtrados = STORE.alocacao.filter(r => {
-    let matchPallet = !palletSel || norm(r.pallet) === norm(palletSel);
-    if (!matchPallet) return false;
-    
-    if (r.endereco && r.endereco !== 'SEM POSIÇÃO DISPONÍVEL') {
-      const ruaEnd = r.endereco.substring(2, 4);
-      const prefixoNum = parseInt(r.endereco.substring(9, 11), 10);
-      const ladoEnd = (prefixoNum % 2 === 0) ? 'PAR' : 'IMPAR';
-      
-      if (ruaSel && ruaEnd !== ruaSel) return false;
-      if (ladoSel && ladoEnd !== ladoSel) return false;
-    }
-    return true;
-  });
-  
+  let filtrados = STORE.alocacao.filter(r => !palletSel || norm(r.pallet) === norm(palletSel));
   filtrados.sort((a, b) => norm(a.pallet).localeCompare(norm(b.pallet)));
+
   const cnt = document.getElementById('cntAlocacao');
   if(cnt) cnt.textContent = filtrados.length + ' registros';
   if(!tbody) return;
-  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="5">Nenhuma alocação encontrada.</td></tr>'; return; }
+  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="5">Nenhuma alocação executada.</td></tr>'; return; }
+  
   tbody.innerHTML = filtrados.map(r => `
     <tr>
       <td>${r.produto}</td>
@@ -1528,6 +1517,30 @@ function renderAlocacao(){
       <td><span class="${r.endereco === 'SEM POSIÇÃO DISPONÍVEL' ? 'badge red' : ''}">${r.endereco}</span></td>
     </tr>
   `).join('');
+}
+
+function gerarEntrada(){
+  STORE.entrada = [];
+  const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
+  
+  STORE.alocacao.forEach(item => {
+    if(lotesComErro.has(normLote(item.lote))) return;
+    if(item.endereco && item.endereco !== 'SEM POSIÇÃO DISPONÍVEL'){
+      const itemIcs = STORE.ics.find(i => norm(i.lote) === norm(item.lote));
+      const nomeFantasiaIcs = itemIcs ? itemIcs.produto : item.produto;
+      if(!nomeFantasiaIcs) return;
+      const codObj = STORE.codigos.find(c => norm(c.nome) === norm(nomeFantasiaIcs));
+      if(!codObj || !codObj.codigo) return;
+      STORE.entrada.push({
+        Codigo: codObj.codigo,
+        Endereço: item.endereco,
+        Estoque: '1',
+        DataVencimento: '01/02/2200',
+        Awb: item.awb || ''
+      });
+    }
+  });
+  renderErros();
 }
 
 function gerarSaida(){
@@ -1612,7 +1625,9 @@ function renderSaida(){
   const tbody = document.getElementById('tbodySaida');
   const cnt = document.getElementById('cntSaida');
   if(!tbody) return;
+  
   const filtrados = STORE.saida.filter(s => !busca || norm(s.Codigo).includes(busca) || norm(s.Awb).includes(busca) || norm(s.Endereço).includes(busca));
+  
   if(cnt) cnt.textContent = filtrados.length + ' registros';
   if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="5">Nenhum registro de saída localizado.</td></tr>'; return; }
   tbody.innerHTML = filtrados.map(s => `<tr><td><strong>${s.Codigo}</strong></td><td>${s.Endereço}</td><td>${s.Estoque}</td><td>${s.DataVencimento}</td><td><strong>${s.Awb}</strong></td></tr>`).join('');
@@ -1636,14 +1651,11 @@ function gerarConcatenar(){
       let awbNorm = norm(item.awb);
       if(awbNorm && !awbsEntradaAdicionados.has(awbNorm)) {
         awbsEntradaAdicionados.add(awbNorm);
+        
         let codigoCliente = '';
         const codObj = STORE.codigos.find(c => norm(c.nome) === norm(item.produto));
         if(codObj) codigoCliente = codObj.codigo;
-        else {
-          const estMatch = STORE.estoqueLocal.find(e => norm(e.awb) === awbNorm);
-          if(estMatch && estMatch.produto) codigoCliente = estMatch.produto;
-          else codigoCliente = item.produto || 'GERAL';
-        }
+        else codigoCliente = item.produto || 'GERAL';
         
         STORE.concatenar.push(formatarLinhaConcatenada({ 
           codigo: codigoCliente, 
@@ -1660,6 +1672,7 @@ function gerarConcatenar(){
     let awbNorm = norm(s.Awb);
     if(awbNorm && !awbsSaidaAdicionados.has(awbNorm)) {
       awbsSaidaAdicionados.add(awbNorm);
+      
       STORE.concatenar.push(formatarLinhaConcatenada({ 
         codigo: s.Codigo || '', 
         endereco: s.Endereço || '', 
@@ -1774,60 +1787,42 @@ function gerarPalletEndereco(){
   const lotesComErro = new Set(STORE.erros.map(e => normLote(e.lote)));
   const mapa = new Map();
   
-  // 1. Prioriza o que foi gerado na Alocação Automática
   STORE.alocacao.forEach(item => {
     if(lotesComErro.has(normLote(item.lote))) return;
-    let pal = item.pallet || item.pallete;
-    let end = item.endereco;
-    if(pal && pal !== 'N/A' && pal !== '—' && end && end !== 'SEM POSIÇÃO DISPONÍVEL' && !mapa.has(pal)){
-      mapa.set(pal, end);
+    if(item.pallet && item.endereco && item.endereco !== 'SEM POSIÇÃO DISPONÍVEL' && !mapa.has(item.pallet)){
+      mapa.set(item.pallet, item.endereco);
     }
   });
-
-  // 2. Se a alocação estiver vazia, puxa direto do ICS cruzado com a Relação
-  if(mapa.size === 0 && STORE.ics.length > 0) {
-    STORE.ics.forEach(item => {
-      let pal = item.pallet || item.pallete;
-      let relMatch = STORE.relacao.find(r => normLote(r.lote) === normLote(item.lote));
-      let end = relMatch ? (relMatch.endereco || relMatch.local || 'Aguardando Alocação') : 'Aguardando Alocação';
-      if(pal && pal !== 'N/A' && pal !== '—' && !mapa.has(pal)) {
-        mapa.set(pal, end);
-      }
-    });
-  }
-
   mapa.forEach((endereco, pallet) => STORE.palletEndereco.push({ pallet, endereco }));
   renderPalletEndereco();
 }
 
 function renderPalletEndereco(){
-  if(STORE.palletEndereco.length === 0) gerarPalletEndereco();
   const buscaEl = document.getElementById('buscaPalletEndereco');
   const busca = buscaEl ? norm(buscaEl.value) : '';
   const tbody = document.getElementById('tbodyPalletEndereco');
   const cnt = document.getElementById('cntPalletEndereco');
-  
   if(!tbody) return;
   const filtrados = STORE.palletEndereco.filter(item => !busca || norm(item.pallet).includes(busca) || norm(item.endereco).includes(busca));
   if(cnt) cnt.textContent = filtrados.length + ' registros';
-  
-  if(!filtrados.length){ 
-    tbody.innerHTML = '<tr><td colspan="2" class="empty-msg">Nenhum registo encontrado. Certifique-se de executar a Alocação Automática primeiro.</td></tr>'; 
-    return; 
-  }
-  tbody.innerHTML = filtrados.map(item => `<tr><td><strong>${item.pallet}</strong></td><td><code>${item.endereco}</code></td></tr>`).join('');
+  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="2">Nenhum registro encontrado.</td></tr>'; return; }
+  tbody.innerHTML = filtrados.map(item => `<tr><td><strong>${item.pallet}</strong></td><td>${item.endereco}</td></tr>`).join('');
 }
+
 function copiarTabelaOutlook(){
-  if(!STORE.palletEndereco.length) gerarPalletEndereco();
-  if(!STORE.palletEndereco.length){ toast('Nenhum dado para copiar.', 'warning'); return; }
-  const linhas = STORE.palletEndereco.map(item => `${item.pallet}\t${item.endereco}`).join('\n');
-  const cabecalho = 'PALLET\tENDEREÇO\n';
-  const textoCompleto = cabecalho + linhas;
-  navigator.clipboard.writeText(textoCompleto).then(() => {
-    toast('Copiado! Agora basta colar diretamente no Outlook.', 'success');
-  }).catch(() => {
-    toast('Erro ao copiar para a área de transferência.', 'error');
-  });
+  const tabela = document.getElementById('tabelaPalletEnderecoVisual');
+  if(!tabela || !STORE.palletEndereco.length){ toast('Nenhum dado para copiar', 'warning'); return; }
+  const range = document.createRange();
+  range.selectNode(tabela);
+  window.getSelection().removeAllRanges();
+  window.getSelection().addRange(range);
+  try {
+    document.execCommand('copy');
+    window.getSelection().removeAllRanges();
+    toast('Copiado para a área de transferência!', 'success');
+  } catch(e) {
+    toast('Erro ao copiar tabela', 'error');
+  }
 }
 
 function gerarValidacaoFinal(){
@@ -1836,29 +1831,19 @@ function gerarValidacaoFinal(){
   
   STORE.alocacao.forEach(item => {
     if(lotesComErro.has(normLote(item.lote))) return;
-    if(!item.awb) return;
-    
-    let endPlanejado = item.endereco || '—';
-    let itensEstoque = STORE.estoqueLocal.filter(e => norm(e.awb) === norm(item.awb));
-    let endSenior = 'NÃO ENCONTRADO NO SENIOR';
-    let status = 'NAO_SUBIU';
-    
-    if(itensEstoque.length > 0) {
-      endSenior = itensEstoque[0].local || '—';
-      if(norm(endSenior) === norm(endPlanejado)) {
-        status = 'SUBIU';
-      } else {
-        status = 'DIVERGENTE';
-      }
+    if(item.endereco && item.endereco !== 'SEM POSIÇÃO DISPONÍVEL'){
+      const estNoSenior = STORE.estoqueLocal.find(e => norm(e.awb) === norm(item.awb));
+      const enderecoSenior = estNoSenior ? estNoSenior.local : 'NÃO ENCONTRADO';
+      const status = (enderecoSenior === item.endereco) ? 'SUBIU' : 'NAO_SUBIU';
+      
+      STORE.validacaoFinal.push({
+        awb: item.awb,
+        lote: item.lote,
+        enderecoPlanejado: item.endereco,
+        enderecoSenior: enderecoSenior,
+        status: status
+      });
     }
-
-    STORE.validacaoFinal.push({
-      awb: item.awb,
-      lote: item.lote,
-      enderecoPlanejado: endPlanejado,
-      enderecoSenior: endSenior,
-      status: status
-    });
   });
   renderValidacaoFinal();
 }
@@ -1868,107 +1853,66 @@ function renderValidacaoFinal(){
   const busca = buscaEl ? norm(buscaEl.value) : '';
   const selStatus = document.getElementById('filtroStatusValidacao');
   const statusFiltro = selStatus ? selStatus.value : '';
-  
-  let filtrados = STORE.validacaoFinal;
-  if(statusFiltro) {
-    filtrados = filtrados.filter(v => v.status === statusFiltro);
-  }
-  if(busca) {
-    filtrados = filtrados.filter(v => norm(v.awb).includes(busca) || norm(v.lote).includes(busca) || norm(v.status).includes(busca));
-  }
-  
   const tbody = document.getElementById('tbodyValidacaoFinal');
   const cnt = document.getElementById('cntValidacaoFinal');
-  if(cnt) cnt.textContent = filtrados.length + ' registros';
   if(!tbody) return;
-  if(!filtrados.length){
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Nenhum registro encontrado.</td></tr>';
-    return;
-  }
+  
+  let filtrados = STORE.validacaoFinal;
+  if(statusFiltro) filtrados = filtrados.filter(v => v.status === statusFiltro);
+  if(busca) filtrados = filtrados.filter(v => norm(v.awb).includes(busca) || norm(v.lote).includes(busca) || norm(v.enderecoPlanejado).includes(busca));
+  
+  if(cnt) cnt.textContent = filtrados.length + ' registros';
+  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Nenhum registro de validação.</td></tr>'; return; }
   
   tbody.innerHTML = filtrados.map(v => {
-    let corBadge = 'var(--muted)';
-    let textoStatus = v.status;
-    if(v.status === 'SUBIU') { corBadge = 'var(--success)'; textoStatus = 'No Senior (OK)'; }
-    else if(v.status === 'NAO_SUBIU') { corBadge = 'var(--danger)'; textoStatus = 'Fora do Senior'; }
-    else if(v.status === 'DIVERGENTE') { corBadge = 'var(--warning)'; textoStatus = 'Endereço Divergente'; }
-
+    const badgeStyle = v.status === 'SUBIU' ? 'background:rgba(22,163,74,0.15);color:#4ade80;padding:3px 8px;border-radius:4px;' : 'background:rgba(220,38,38,0.15);color:#f87171;padding:3px 8px;border-radius:4px;';
+    const statusTexto = v.status === 'SUBIU' ? 'No senior' : 'Fora do senior';
     return `<tr>
       <td><strong>${v.awb}</strong></td>
       <td>${v.lote}</td>
       <td>${v.enderecoPlanejado}</td>
       <td>${v.enderecoSenior}</td>
-      <td><span style="color: ${corBadge}; font-weight: 700;">${textoStatus}</span></td>
+      <td><span style="${badgeStyle} font-weight:700;">${statusTexto}</span></td>
     </tr>`;
   }).join('');
 }
 
 function baixarValidacaoFinalExcel(){
-  if(!STORE.validacaoFinal.length){ toast('Nenhum dado de validação para baixar.', 'warning'); return; }
+  if(!STORE.validacaoFinal.length){ toast('Nenhum dado para baixar', 'warning'); return; }
   const dados = STORE.validacaoFinal.map(v => ({
     "AWB": v.awb,
     "LOTE": v.lote,
     "ENDEREÇO PLANEJADO": v.enderecoPlanejado,
     "ENDEREÇO NO SENIOR": v.enderecoSenior,
-    "STATUS": v.status
+    "STATUS": v.status === 'SUBIU' ? 'No senior' : 'Fora do senior'
   }));
   baixarExcel([{nome: "Validacao Final", data: dados}], "relatorio_validacao_final.xlsx");
   toast('Relatório baixado com sucesso!', 'success');
 }
 
-function salvarHistorico() {
-  try {
-    const wb = XLSX.utils.book_new();
-    const abas = [
-      { nome: "Relacao", data: STORE.relacao.length ? STORE.relacao : [{ Status: "Sem dados" }] },
-      { nome: "ICS", data: STORE.ics.length ? STORE.ics : [{ Status: "Sem dados" }] },
-      { nome: "Armazem", data: STORE.armazem.length ? STORE.armazem : [{ Status: "Sem dados" }] },
-      { nome: "Alocacao", data: STORE.alocacao.length ? STORE.alocacao : [{ Status: "Sem dados" }] },
-      { nome: "Entrada", data: STORE.entrada.length ? STORE.entrada : [{ Status: "Sem dados" }] },
-      { nome: "EstoqueLocal", data: STORE.estoqueLocal.length ? STORE.estoqueLocal : [{ Status: "Sem dados" }] },
-      { nome: "Saida", data: STORE.saida.length ? STORE.saida : [{ Status: "Sem dados" }] },
-      { nome: "CodigosClientes", data: STORE.codigos.length ? STORE.codigos : [{ Status: "Sem dados" }] },
-      { nome: "Erros", data: STORE.erros.length ? STORE.erros : [{ Status: "Sem dados" }] },
-      { nome: "ValidacaoFinal", data: STORE.validacaoFinal.length ? STORE.validacaoFinal : [{ Status: "Sem dados" }] }
-    ];
-
-    abas.forEach(a => {
-      const ws = XLSX.utils.json_to_sheet(a.data);
-      XLSX.utils.book_append_sheet(wb, ws, a.nome);
-    });
-
-    XLSX.writeFile(wb, "Historico.xlsx");
-
-    const estadoGeral = {
-      relacao: STORE.relacao,
-      ics: STORE.ics,
-      armazem: STORE.armazem,
-      alocacao: STORE.alocacao,
-      entrada: STORE.entrada,
-      estoqueLocal: STORE.estoqueLocal,
-      saida: STORE.saida,
-      concatenar: STORE.concatenar,
-      codigos: STORE.codigos,
-      erros: STORE.erros,
-      palletEndereco: STORE.palletEndereco,
-      validacaoFinal: STORE.validacaoFinal
-    };
-    localStorage.setItem('wms_backup_geral', JSON.stringify(estadoGeral));
-
-    toast('Histórico baixado em Excel (.xlsx) com sucesso!', 'success');
-  } catch (err) {
-    toast('Erro ao gerar o Excel: ' + err.message, 'error');
-  }
+function salvarHistorico(){
+  const dadosGerais = {
+    codigos: STORE.codigos,
+    ics: STORE.ics,
+    relacao: STORE.relacao,
+    alocacao: STORE.alocacao,
+    erros: STORE.erros
+  };
+  const blob = new Blob([JSON.stringify(dadosGerais, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'historico_wms.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast('Histórico salvo com sucesso!', 'success');
 }
 
 function confirmarZerar(){
-  abrirModal('Reiniciar Sistema', 'Tem certeza que deseja apagar todos os dados da sessão?', '🗑️', () => {
+  abrirModal('Reiniciar Sistema', 'Tem certeza que deseja apagar todos os dados e reiniciar?', '🗑️', () => {
     localStorage.removeItem(LS_KEY);
     location.reload();
   });
 }
 
-window.onload = function() {
+window.onload = () => {
   carregarCodigos();
   carregarErros();
   abrirModalInicio();
