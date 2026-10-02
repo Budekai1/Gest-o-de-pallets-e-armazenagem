@@ -501,7 +501,7 @@ tr:hover td { background: #1a2538; }
     <div class="toolbar" style="margin-bottom:12px; gap:8px; flex-wrap:wrap;">
       <input type="search" id="buscaErros" placeholder="🔍 Buscar erro, lote ou detalhe..." oninput="renderErros()" style="flex:1;">
       <select id="filtroCatErros" onchange="renderErros()">
-        <option value="">Todas as categorias</option>
+        <option value="">Selecione o erro</option>
       </select>
       <button class="btn amber sm" onclick="baixarErrosExcel()">📥 Baixar (Excel)</button>
       <button class="btn red sm" onclick="confirmarLimparErros()">🗑️ Limpar Erros</button>
@@ -939,7 +939,7 @@ function renderErros(){
   const categorias = [...new Set(STORE.erros.map(e => e.categoria).filter(Boolean))].sort();
 
   if(selCat){
-    selCat.innerHTML = '<option value="">Todas as categorias</option>' + categorias.map(c => `<option value="${c}">${c}</option>`).join('');
+    selCat.innerHTML = '<option value="">Selecione o erro</option>' + categorias.map(c => `<option value="${c}">${c}</option>`).join('');
     selCat.value = categorias.includes(catAtual) ? catAtual : '';
   }
 
@@ -959,12 +959,7 @@ function renderErros(){
   });
 
   let filtrados = [...grupos.values()];
-  
-  // Filtragem correta por categoria selecionada (mostrando o erro respectivo mesmo se houver mais de um)
-  if(catAtual) {
-    filtrados = filtrados.filter(g => g.categorias.includes(catAtual));
-  }
-  
+  if(catAtual) filtrados = filtrados.filter(g => g.categorias.includes(catAtual));
   if(busca){
     filtrados = filtrados.filter(g => {
       const texto = [g.produto, g.lote, g.awb, g.pallet, ...g.categorias, ...g.mensagens].map(norm).join(' ');
@@ -977,7 +972,7 @@ function renderErros(){
   if(!tbody) return;
   if(cntErros) cntErros.textContent = filtrados.length + ' registros';
   if(!filtrados.length){
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Nenhum erro encontrado.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Digite algo para pesquisar.</td></tr>';
     return;
   }
 
@@ -986,7 +981,7 @@ function renderErros(){
     const awbTexto = g.awb || '';
     const produtoTexto = g.produto || '—';
     const palletTexto = g.pallet || '—';
-    const errosHtml = g.categorias.map(cat => `<div style="margin-bottom:4px; font-weight:800; color:#f87171; white-space:normal; line-height:1.25;">${cat === 'LOTE NAO LOCALIZADO NO ICS' ? 'NÃO LOCALIZADO NO ICS' : cat === 'DEVOLVER, CADASTRAR NO SENIOR' ? 'DEVOLVER, CADASTRAR NO SÊNIOR' : cat}</div>`).join('');
+    const errosHtml = g.categorias.map(cat => `<div style="margin-bottom:4px; font-weight:800; color:#f87171; white-space:normal; line-height:1.25;">${cat === 'LOTE NAO LOCALIZADO NO ICS' ? 'NÃO LOCALIZADO NO ICS' : cat === 'DEVOLVER, CADASTRAR NO SENIOR' ? 'DEVOLVER / CADASTRAR NO SENIOR' : cat}</div>`).join('');
     const detalhes = g.mensagens.length > 1 ? `<div style="margin-top:6px;color:#94a3b8;font-size:11px;line-height:1.3;">${g.mensagens.join('<br>')}</div>` : '';
     const colunaAwbHtml = awbTexto ? `<code style="background:rgba(255,255,255,0.07);padding:2px 6px;border-radius:4px;color:#60a5fa;font-weight:600;">${awbTexto}</code>` : `<span style="color:#64748b;">—</span>`;
     return `<tr>
@@ -1027,12 +1022,15 @@ function compararRelacaoComICS() {
     }
   });
 
+  // Registro com erro NÃO pode continuar para as próximas etapas.
   STORE.relacao = relacaoValida;
 }
 
 function processarIcsIndependente(jsonIcs) {
   STORE.ics = [];
 
+  // Primeiro conta duplicidades no arquivo bruto.
+  // AWB (código de rastreio) repetido também é tratado como LOTE DUPLICADO.
   const contagemAwb = new Map();
   const contagemLote = new Map();
 
@@ -1066,6 +1064,7 @@ function processarIcsIndependente(jsonIcs) {
     const alturaBruta = val(linha, ['ALTURA DO PALLET', 'ALTURA PALLET', 'ALTURA', 'HEIGHT', 'NÍVEL', 'NIVEL']);
     const alturaInfo = parseAltura(alturaBruta);
 
+    // Qualquer duplicidade é bloqueada antes de entrar no STORE.ics.
     if (awbsDuplicados.has(awb) || lotesDuplicados.has(lote)) {
       const chaveErro = awbsDuplicados.has(awb) ? `AWB:${awb}` : `LOTE:${lote}`;
       if (!duplicadosRegistrados.has(chaveErro)) {
@@ -1086,14 +1085,15 @@ function processarIcsIndependente(jsonIcs) {
         registrarErro('FORMATAÇÃO', `Diferença de formatação para "${produto}".`, palletFinal, lote, awb, produto);
         possuiErroProduto = true;
       } else {
-        // Categoria correta solicitada pelo usuário
-        registrarErro('DEVOLVER, CADASTRAR NO SÊNIOR', `Produto "${produto || 'VAZIO'}" não encontrado na base.`, palletFinal, lote, awb, produto);
+        registrarErro('DEVOLVER, CADASTRAR NO SENIOR', `Produto "${produto || 'VAZIO'}" não encontrado na base.`, palletFinal, lote, awb, produto);
         possuiErroProduto = true;
       }
     }
 
+    // Registros com erro não entram no fluxo operacional.
     if (possuiErroProduto) return;
 
+    // Se a altura vier do ICS, mantém o valor. Se não vier, tenta a Relação pelo lote.
     let alturaFinal = alturaInfo.num !== null ? alturaInfo.num : (alturaInfo.cat !== '—' ? alturaInfo.cat : '—');
     let categoriaFinal = alturaInfo.cat;
     if (alturaFinal === '—') {
@@ -1144,6 +1144,8 @@ function processarRelacaoIndependente(jsonRelacao) {
     const {num, cat} = parseAltura(status);
     const alturaFormatada = num === null ? norm(status) : num;
 
+    // Lote duplicado = mesma identificação de lote em mais de uma ocorrência/pallet.
+    // Todas as ocorrências do lote são retiradas da Relação para não seguirem o fluxo.
     const loteDuplicado = mapaLotes[lote].size > 1 || jsonRelacao.filter(l => normLote(val(l, ['LOTE', 'LOTE / MASTER', 'LOTE/MASTER', 'MASTER'])) === lote).length > 1;
     if (loteDuplicado) {
       if (!lotesDuplicadosRegistrados.has(lote)) {
