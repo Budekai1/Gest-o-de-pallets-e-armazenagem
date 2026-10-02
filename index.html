@@ -501,7 +501,7 @@ tr:hover td { background: #1a2538; }
     <div class="toolbar" style="margin-bottom:12px; gap:8px; flex-wrap:wrap;">
       <input type="search" id="buscaErros" placeholder="🔍 Buscar erro, lote ou detalhe..." oninput="renderErros()" style="flex:1;">
       <select id="filtroCatErros" onchange="renderErros()">
-        <option value="">Selecione o ERRO</option>
+        <option value="">Todas as categorias</option>
       </select>
       <button class="btn amber sm" onclick="baixarErrosExcel()">📥 Baixar (Excel)</button>
       <button class="btn red sm" onclick="confirmarLimparErros()">🗑️ Limpar Erros</button>
@@ -939,7 +939,7 @@ function renderErros(){
   const categorias = [...new Set(STORE.erros.map(e => e.categoria).filter(Boolean))].sort();
 
   if(selCat){
-    selCat.innerHTML = '<option value="">Selecione o erro</option>' + categorias.map(c => `<option value="${c}">${c}</option>`).join('');
+    selCat.innerHTML = '<option value="">Todas as categorias</option>' + categorias.map(c => `<option value="${c}">${c}</option>`).join('');
     selCat.value = categorias.includes(catAtual) ? catAtual : '';
   }
 
