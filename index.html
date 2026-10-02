@@ -175,7 +175,7 @@ tr:hover td { background: #1a2538; }
   position: fixed !important;
   top: 0 !important;
   right: 0 !important;
-  width: 1050px !important;
+  width: 1200px !important;
   max-width: 98vw !important;
   height: 100vh !important;
   background: var(--surface) !important;
@@ -343,7 +343,7 @@ tr:hover td { background: #1a2538; }
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>PRODUTO/NOME FANTASIA</th><th>AWB</th><th>LOTE / MASTER</th><th>PALET</th><th>ALTURA</th></tr></thead>
+          <thead><tr><th>PRODUTO/NOME FANTASIA</th><th>AWB</th><th>LOTE / MASTER</th><th>PALET</th><th>ALTURA DO PALLET</th></tr></thead>
           <tbody id="tbodyIcs"></tbody>
         </table>
       </div>
@@ -363,6 +363,8 @@ tr:hover td { background: #1a2538; }
         <label>Pallet:</label>
         <select id="filtroPalletAloc" onchange="renderAlocacao()"><option value="">Todos</option></select>
         <button class="btn" onclick="executarAlocacao()">⚡ Executar Alocação</button>
+        <div class="spacer"></div>
+        <input type="search" id="buscaAlocacao" placeholder="🔍 Buscar Produto, AWB, Lote, Pallet ou Endereço..." oninput="renderAlocacao()">
       </div>
       <div class="table-wrap">
         <table>
@@ -499,7 +501,7 @@ tr:hover td { background: #1a2538; }
     <div class="toolbar" style="margin-bottom:12px; gap:8px; flex-wrap:wrap;">
       <input type="search" id="buscaErros" placeholder="🔍 Buscar erro, lote ou detalhe..." oninput="renderErros()" style="flex:1;">
       <select id="filtroCatErros" onchange="renderErros()">
-        <option value="">Todas as categorias</option>
+        <option value="">Selecione o ERRO</option>
       </select>
       <button class="btn amber sm" onclick="baixarErrosExcel()">📥 Baixar (Excel)</button>
       <button class="btn red sm" onclick="confirmarLimparErros()">🗑️ Limpar Erros</button>
@@ -894,13 +896,15 @@ function importarCodigos(input){
   });
 }
 function renderCodigos(){
-  const busca = norm(document.getElementById('buscaCodigos').value);
+  const buscaEl = document.getElementById('buscaCodigos');
+  const busca = buscaEl ? norm(buscaEl.value) : '';
   const tbody = document.getElementById('tbodyCodigos');
   if(!tbody) return;
-  const filtrados = STORE.codigos.filter((c, i) => !busca || norm(c.codigo).includes(busca) || norm(c.nome).includes(busca));
-  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="3">Nenhum código cadastrado.</td></tr>'; return; }
-  tbody.innerHTML = STORE.codigos.map((c, i) => {
-    if(busca && !norm(c.codigo).includes(busca) && !norm(c.nome).includes(busca)) return '';
+  if(!busca){ tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Digite algo para pesquisar.</td></tr>'; return; }
+  const filtrados = STORE.codigos.filter(c => norm(c.codigo).includes(busca) || norm(c.nome).includes(busca));
+  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Nenhum código encontrado.</td></tr>'; return; }
+  tbody.innerHTML = filtrados.map(c => {
+    const i = STORE.codigos.indexOf(c);
     return `<tr><td><strong>${c.codigo}</strong></td><td>${c.nome}</td><td><button class="btn red sm" onclick="removerCodigo(${i})">🗑️</button></td></tr>`;
   }).join('');
 }
@@ -932,51 +936,65 @@ function renderErros(){
   const busca = buscaEl ? norm(buscaEl.value) : '';
   const selCat = document.getElementById('filtroCatErros');
   const catAtual = selCat ? selCat.value : '';
-  const categoriasPadrao = ['LOTE DUPLICADO', 'LOTE NAO LOCALIZADO NO ICS', 'DEVOLVER, CADASTRAR NO SENIOR', 'FORMATAÇÃO'];
-  
+  const categorias = [...new Set(STORE.erros.map(e => e.categoria).filter(Boolean))].sort();
+
   if(selCat){
-    selCat.innerHTML = '<option value="">Todas as categorias</option>' + categoriasPadrao.map(c => `<option>${c}</option>`).join('');
-    selCat.value = categoriasPadrao.includes(catAtual) ? catAtual : '';
+    selCat.innerHTML = '<option value="">Selecione o erro</option>' + categorias.map(c => `<option value="${c}">${c}</option>`).join('');
+    selCat.value = categorias.includes(catAtual) ? catAtual : '';
+  }
+
+  // Agrupa todos os erros do mesmo item para que ele apareça uma única vez,
+  // trazendo todas as categorias na coluna ERROS.
+  const grupos = new Map();
+  STORE.erros.forEach(e => {
+    const chaveItem = norm(e.lote) || norm(e.awb) || (norm(e.pallet) + '|' + norm(e.produto));
+    if(!grupos.has(chaveItem)) grupos.set(chaveItem, { ...e, categorias: [], mensagens: [] });
+    const g = grupos.get(chaveItem);
+    if(e.categoria && !g.categorias.includes(e.categoria)) g.categorias.push(e.categoria);
+    if(e.mensagem && !g.mensagens.includes(e.mensagem)) g.mensagens.push(e.mensagem);
+    if(!g.pallet && e.pallet) g.pallet = e.pallet;
+    if(!g.lote && e.lote) g.lote = e.lote;
+    if(!g.awb && e.awb) g.awb = e.awb;
+    if(!g.produto && e.produto) g.produto = e.produto;
+  });
+
+  let filtrados = [...grupos.values()];
+  
+  // Filtragem correta por categoria selecionada (mostrando o erro respectivo mesmo se houver mais de um)
+  if(catAtual) {
+    filtrados = filtrados.filter(g => g.categorias.includes(catAtual));
   }
   
-  let filtrados = catAtual ? STORE.erros.filter(e => e.categoria === catAtual) : STORE.erros;
-  if(busca) {
-    filtrados = filtrados.filter(e => {
-      return norm(e.produto).includes(busca) || norm(e.lote).includes(busca) || norm(e.awb).includes(busca) || norm(e.pallet).includes(busca) || norm(e.mensagem).includes(busca) || norm(e.categoria).includes(busca);
+  if(busca){
+    filtrados = filtrados.filter(g => {
+      const texto = [g.produto, g.lote, g.awb, g.pallet, ...g.categorias, ...g.mensagens].map(norm).join(' ');
+      return texto.includes(busca);
     });
   }
-  
+
   const tbody = document.getElementById('tbodyErros');
   const cntErros = document.getElementById('cntErros');
   if(!tbody) return;
   if(cntErros) cntErros.textContent = filtrados.length + ' registros';
-  
   if(!filtrados.length){
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Nenhum erro registrado.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Nenhum erro encontrado.</td></tr>';
     return;
   }
-  
-  tbody.innerHTML = filtrados.map(e => {
-    let loteTexto = e.lote || '—';
-    let awbTexto = e.awb || '';
-    let produtoTexto = e.categoria === 'LOTE NAO LOCALIZADO NO ICS' ? '—' : (e.produto || '—');
-    let palletTexto = e.pallet || '—';
-    
-    // Exibição simplificada baseada apenas no nome/categoria do erro
-    let erroTexto = e.categoria || '—';
-    if (e.categoria === 'DEVOLVER, CADASTRAR NO SENIOR') erroTexto = 'DEVOLVER / CADASTRAR NO SENIOR';
-    else if (e.categoria === 'FORMATAÇÃO') erroTexto = 'FORMATAÇÃO';
-    else if (e.categoria === 'LOTE NAO LOCALIZADO NO ICS') erroTexto = 'NÃO LOCALIZADO NO ICS';
-    else if (e.categoria === 'LOTE DUPLICADO') erroTexto = 'LOTE DUPLICADO';
-    
-    const colunaAwbHtml = awbTexto ? `<code style="background: rgba(255,255,255,0.07); padding: 2px 6px; border-radius: 4px; color: #60a5fa; font-weight: 600;">${awbTexto}</code>` : `<span style="color: #64748b;">—</span>`;
 
+  tbody.innerHTML = filtrados.map(g => {
+    const loteTexto = g.lote || '—';
+    const awbTexto = g.awb || '';
+    const produtoTexto = g.produto || '—';
+    const palletTexto = g.pallet || '—';
+    const errosHtml = g.categorias.map(cat => `<div style="margin-bottom:4px; font-weight:800; color:#f87171; white-space:normal; line-height:1.25;">${cat === 'LOTE NAO LOCALIZADO NO ICS' ? 'NÃO LOCALIZADO NO ICS' : cat === 'DEVOLVER, CADASTRAR NO SENIOR' ? 'DEVOLVER, CADASTRAR NO SÊNIOR' : cat}</div>`).join('');
+    const detalhes = g.mensagens.length > 1 ? `<div style="margin-top:6px;color:#94a3b8;font-size:11px;line-height:1.3;">${g.mensagens.join('<br>')}</div>` : '';
+    const colunaAwbHtml = awbTexto ? `<code style="background:rgba(255,255,255,0.07);padding:2px 6px;border-radius:4px;color:#60a5fa;font-weight:600;">${awbTexto}</code>` : `<span style="color:#64748b;">—</span>`;
     return `<tr>
-      <td><span style="color:var(--text); font-weight:600; font-size: 13px;">${produtoTexto}</span></td>
-      <td><strong style="font-size: 14px;">${loteTexto}</strong></td>
+      <td><span style="color:var(--text);font-weight:600;font-size:13px;">${produtoTexto}</span></td>
+      <td><strong style="font-size:14px;">${loteTexto}</strong></td>
       <td>${colunaAwbHtml}</td>
-      <td style="font-size: 13px; color: var(--primary);"><strong>${palletTexto}</strong></td>
-      <td style="font-size: 13px; color: #f87171; font-weight: 700; white-space: nowrap;">${erroTexto}</td>
+      <td style="font-size:13px;color:var(--primary);"><strong>${palletTexto}</strong></td>
+      <td style="font-size:13px;min-width:260px;white-space:normal;vertical-align:top;">${errosHtml}${detalhes}</td>
     </tr>`;
   }).join('');
 }
@@ -992,56 +1010,110 @@ function baixarErrosExcel() {
 // --- Funções de Relação, ICS e Alocação ---
 function compararRelacaoComICS() {
   if (!STORE.ics || STORE.ics.length === 0 || !STORE.relacao || STORE.relacao.length === 0) return;
-  const lotesIcsSet = new Set(STORE.ics.map(item => normLote(item.lote)));
+
+  const lotesIcsSet = new Set(STORE.ics.map(item => normLote(item.lote)).filter(Boolean));
   const relacaoValida = [];
-  
+
   STORE.relacao.forEach(item => {
     const loteNorm = normLote(item.lote);
     if (lotesIcsSet.has(loteNorm)) {
       relacaoValida.push(item);
     } else {
-      registrarErro('LOTE NAO LOCALIZADO NO ICS', `O lote "${item.lote}" consta na Relação, mas não foi localizado no arquivo ICS.`, item.pallet || 'N/A', item.lote, '', '');
+      registrarErro(
+        'LOTE NAO LOCALIZADO NO ICS',
+        `O lote "${item.lote}" consta na Relação, mas não foi localizado no arquivo ICS.`,
+        item.pallet || 'N/A', item.lote, '', ''
+      );
     }
   });
+
   STORE.relacao = relacaoValida;
 }
 
 function processarIcsIndependente(jsonIcs) {
   STORE.ics = [];
-  const chavesIcsSet = new Set();
-  
+
+  const contagemAwb = new Map();
+  const contagemLote = new Map();
+
   jsonIcs.forEach(linha => {
-    const produto = norm(val(linha, ['PRODUTO/NOME FANTASIA', 'NOME FANTASIA DO CLIENTE', 'NOME FANTASIA', 'CLIENTE', 'PRODUTO']));
-    const awb = norm(val(linha, ['AWB', 'AWB/LOTE/MASTER']));
+    const awb = norm(val(linha, ['AWB', 'AWB/LOTE/MASTER', 'CÓDIGO DE RASTREIO', 'CODIGO DE RASTREIO', 'RASTREIO']));
     const loteBruto = val(linha, ['REV', 'Lote/ID AWB Master', 'LOTE/ MASTER', 'LOTE / MASTER', 'LOTE/MASTER', 'LOTE', 'MASTER', 'A', 'LOTE INDÚSTRIA', 'LOTE INDUSTRIA', 'RECUSAS', 'PAR']);
     const lote = normLote(loteBruto);
-    
+    if (awb) contagemAwb.set(awb, (contagemAwb.get(awb) || 0) + 1);
+    if (lote) contagemLote.set(lote, (contagemLote.get(lote) || 0) + 1);
+  });
+
+  const awbsDuplicados = new Set([...contagemAwb.entries()].filter(([, qtd]) => qtd > 1).map(([chave]) => chave));
+  const lotesDuplicados = new Set([...contagemLote.entries()].filter(([, qtd]) => qtd > 1).map(([chave]) => chave));
+  const duplicadosRegistrados = new Set();
+
+  jsonIcs.forEach(linha => {
+    const produto = norm(val(linha, ['PRODUTO/NOME FANTASIA', 'NOME FANTASIA DO CLIENTE', 'NOME FANTASIA', 'CLIENTE', 'PRODUTO']));
+    const awb = norm(val(linha, ['AWB', 'AWB/LOTE/MASTER', 'CÓDIGO DE RASTREIO', 'CODIGO DE RASTREIO', 'RASTREIO']));
+    const loteBruto = val(linha, ['REV', 'Lote/ID AWB Master', 'LOTE/ MASTER', 'LOTE / MASTER', 'LOTE/MASTER', 'LOTE', 'MASTER', 'A', 'LOTE INDÚSTRIA', 'LOTE INDUSTRIA', 'RECUSAS', 'PAR']);
+    const lote = normLote(loteBruto);
+
     if(!lote && !awb) return;
 
     let palletFinal = norm(val(linha, ['PALET', 'PALLET', 'PALLETE', 'PALETE', 'Nº PALLET', 'PAR', 'LACRES', 'PALLET ', 'ENDEREÇO', 'ENDERECO']));
     if (!palletFinal || palletFinal === 'N/A' || palletFinal === '—') {
-      const relMatch = STORE.relacao.find(r => normLote(r.lote) === lote || String(r.lote).trim() === String(loteBruto).trim());
+      const relMatch = STORE.relacao.find(r => normLote(r.lote) === lote);
       if (relMatch) palletFinal = norm(relMatch.pallet || relMatch.pallete || relMatch.par || relMatch.lacres || relMatch.endereco);
     }
     if (!palletFinal) palletFinal = 'N/A';
 
-    const chaveUnica = `${lote}_${awb}`;
-    if (chavesIcsSet.has(chaveUnica)) return;
-    chavesIcsSet.add(chaveUnica);
+    const alturaBruta = val(linha, ['ALTURA DO PALLET', 'ALTURA PALLET', 'ALTURA', 'HEIGHT', 'NÍVEL', 'NIVEL']);
+    const alturaInfo = parseAltura(alturaBruta);
+
+    if (awbsDuplicados.has(awb) || lotesDuplicados.has(lote)) {
+      const chaveErro = awbsDuplicados.has(awb) ? `AWB:${awb}` : `LOTE:${lote}`;
+      if (!duplicadosRegistrados.has(chaveErro)) {
+        duplicadosRegistrados.add(chaveErro);
+        const detalhe = awbsDuplicados.has(awb)
+          ? `O código de rastreio/AWB "${awb}" está duplicado no arquivo ICS.`
+          : `O lote "${lote}" está duplicado no arquivo ICS.`;
+        registrarErro('LOTE DUPLICADO', detalhe, palletFinal, lote, awb, produto);
+      }
+      return;
+    }
 
     const codObj = STORE.codigos.find(c => norm(c.nome) === norm(produto));
+    let possuiErroProduto = false;
     if (!codObj || !codObj.codigo) {
       const codObjFormat = STORE.codigos.find(c => normPuntuacao(c.nome) === normPuntuacao(produto));
       if (codObjFormat && codObjFormat.codigo) {
         registrarErro('FORMATAÇÃO', `Diferença de formatação para "${produto}".`, palletFinal, lote, awb, produto);
+        possuiErroProduto = true;
       } else {
-        registrarErro('DEVOLVER, CADASTRAR NO SENIOR', `Produto "${produto || 'VAZIO'}" não encontrado na base.`, palletFinal, lote, awb, produto);
+        // Categoria correta solicitada pelo usuário
+        registrarErro('DEVOLVER, CADASTRAR NO SÊNIOR', `Produto "${produto || 'VAZIO'}" não encontrado na base.`, palletFinal, lote, awb, produto);
+        possuiErroProduto = true;
       }
     }
 
-    STORE.ics.push({ produto, awb, lote: String(loteBruto).trim().toUpperCase(), pallet: palletFinal, altura: '—', categoria: '—' });
+    if (possuiErroProduto) return;
+
+    let alturaFinal = alturaInfo.num !== null ? alturaInfo.num : (alturaInfo.cat !== '—' ? alturaInfo.cat : '—');
+    let categoriaFinal = alturaInfo.cat;
+    if (alturaFinal === '—') {
+      const relMatch = STORE.relacao.find(r => normLote(r.lote) === lote);
+      if (relMatch) {
+        alturaFinal = relMatch.altura || '—';
+        categoriaFinal = relMatch.categoria || categoriaAltura(alturaFinal);
+      }
+    }
+
+    STORE.ics.push({
+      produto,
+      awb,
+      lote: String(loteBruto).trim().toUpperCase(),
+      pallet: palletFinal,
+      altura: alturaFinal,
+      categoria: categoriaFinal
+    });
   });
-  
+
   if (STORE.relacao.length > 0) compararRelacaoComICS();
   atualizarProcessosSubsequentes();
   renderIcs(); renderRelacao(); renderErros();
@@ -1068,16 +1140,18 @@ function processarRelacaoIndependente(jsonRelacao) {
     const obs = val(linha, ['OBSERVAÇÕES', 'OBSERVACAO', 'OBS', 'OBSERVAÇÕES']);
     if (!lote) return;
 
-    const status = val(linha, ['STATUS', 'ALTURA', 'HEIGHT']);
+    const status = val(linha, ['STATUS', 'ALTURA DO PALLET', 'ALTURA PALLET', 'ALTURA', 'HEIGHT']);
     const {num, cat} = parseAltura(status);
     const alturaFormatada = num === null ? norm(status) : num;
 
-    if (mapaLotes[lote].size > 1) {
+    const loteDuplicado = mapaLotes[lote].size > 1 || jsonRelacao.filter(l => normLote(val(l, ['LOTE', 'LOTE / MASTER', 'LOTE/MASTER', 'MASTER'])) === lote).length > 1;
+    if (loteDuplicado) {
       if (!lotesDuplicadosRegistrados.has(lote)) {
         lotesDuplicadosRegistrados.add(lote);
         const listaPallets = Array.from(mapaLotes[lote]).join(', ');
         registrarErro('LOTE DUPLICADO', `O lote "${lote}" está duplicado nos pallets: [${listaPallets}].`, listaPallets, lote, '', '');
       }
+      return;
     }
 
     const chaveUnica = `${lote}_${pallet}`;
@@ -1105,18 +1179,25 @@ function importarIcs(input){
 function renderRelacao(){
   const selPallet = document.getElementById('filtroPalletRelacao');
   const palletAtual = selPallet ? selPallet.value : '';
+  const buscaEl = document.getElementById('buscaRelacao');
+  const busca = buscaEl ? norm(buscaEl.value) : '';
   let dados = STORE.relacao;
   const palletsUnicos = [...new Set(dados.map(item => item.pallete || item.pallet))].filter(Boolean).sort();
   if(selPallet){
     selPallet.innerHTML = '<option value="">Todos</option>' + palletsUnicos.map(p => `<option value="${p}">${p}</option>`).join('');
     selPallet.value = palletsUnicos.includes(palletAtual) ? palletAtual : '';
   }
-  let filtrados = palletAtual ? dados.filter(item => (item.pallete || item.pallet) === palletAtual) : dados;
+  let filtrados = dados.filter(item => {
+    const pallet = item.pallete || item.pallet || '';
+    const bateBusca = norm(item.lote || item.codigo).includes(busca) || norm(pallet).includes(busca) || norm(item.altura).includes(busca) || norm(item.categoria).includes(busca) || norm(item.obs).includes(busca);
+    const batePallet = !palletAtual || pallet === palletAtual;
+    return (!busca || bateBusca) && batePallet;
+  });
   const tbody = document.getElementById('tbodyRelacao');
   const cnt = document.getElementById('cntRelacao');
   if(cnt) cnt.textContent = filtrados.length + ' registros';
   if(!tbody) return;
-  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="5">Nenhum registro encontrado.</td></tr>'; return; }
+  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Nenhum registro encontrado.</td></tr>'; return; }
   tbody.innerHTML = filtrados.map(item => `
     <tr>
       <td><strong>${item.lote || item.codigo || '—'}</strong></td>
@@ -1133,7 +1214,7 @@ function renderIcs(){
   const busca = buscaEl ? norm(buscaEl.value) : '';
   const tbody = document.getElementById('tbodyIcs');
   if(!tbody) return;
-  const filtrados = STORE.ics.filter(r => !busca || norm(r.produto).includes(busca) || norm(r.awb).includes(busca) || norm(r.lote).includes(busca));
+  const filtrados = busca ? STORE.ics.filter(r => norm(r.produto).includes(busca) || norm(r.awb).includes(busca) || norm(r.lote).includes(busca) || norm(r.pallet).includes(busca) || norm(r.altura).includes(busca)) : STORE.ics;
   const cnt = document.getElementById('cntIcs');
   if(cnt) cnt.textContent = filtrados.length + ' registros';
   if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="5">Nenhum registro ICS.</td></tr>'; return; }
@@ -1143,7 +1224,7 @@ function renderIcs(){
       <td>${r.awb}</td>
       <td><strong>${r.lote}</strong></td>
       <td>${r.pallet || '—'}</td>
-      <td>${r.categoria}</td>
+      <td>${r.altura || '—'}</td>
     </tr>
   `).join('');
 }
@@ -1301,8 +1382,19 @@ function renderAlocacao(){
   selPallet.innerHTML = '<option value="">Todos</option>' + pallets.map(p => `<option value="${p}">${p}</option>`).join('');
   selPallet.value = pallets.includes(atual) ? atual : '';
   const palletSel = selPallet.value;
+  const buscaEl = document.getElementById('buscaAlocacao');
+  const busca = buscaEl ? norm(buscaEl.value) : '';
   const tbody = document.getElementById('tbodyAlocacao');
-  let filtrados = STORE.alocacao.filter(r => !palletSel || norm(r.pallet) === norm(palletSel));
+  let filtrados = STORE.alocacao.filter(r => {
+    const batePallet = !palletSel || norm(r.pallet) === norm(palletSel);
+    const bateBusca = !busca ||
+      norm(r.produto).includes(busca) ||
+      norm(r.awb).includes(busca) ||
+      norm(r.lote).includes(busca) ||
+      norm(r.pallet).includes(busca) ||
+      norm(r.endereco).includes(busca);
+    return batePallet && bateBusca;
+  });
   const cnt = document.getElementById('cntAlocacao');
   if(cnt) cnt.textContent = filtrados.length + ' registros';
   if(!tbody) return;
@@ -1351,7 +1443,7 @@ function renderSaida(){
   const tbody = document.getElementById('tbodySaida');
   const cnt = document.getElementById('cntSaida');
   if(!tbody) return;
-  const filtrados = STORE.saida.filter(s => !busca || norm(s.Codigo).includes(busca) || norm(s.Awb).includes(busca));
+  const filtrados = busca ? STORE.saida.filter(s => norm(s.Codigo).includes(busca) || norm(s.Endereço).includes(busca) || norm(s.Estoque).includes(busca) || norm(s.DataVencimento).includes(busca) || norm(s.Awb).includes(busca)) : STORE.saida;
   if(cnt) cnt.textContent = filtrados.length + ' registros';
   if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="5">Nenhum registro de saída localizado.</td></tr>'; return; }
   tbody.innerHTML = filtrados.map(s => `<tr><td><strong>${s.Codigo}</strong></td><td>${s.Endereço}</td><td>${s.Estoque}</td><td>${s.DataVencimento}</td><td><strong>${s.Awb}</strong></td></tr>`).join('');
@@ -1394,7 +1486,7 @@ function renderConcatenar(){
   const tbody = document.getElementById('tbodyConcatenar');
   const cnt = document.getElementById('cntConcatenar');
   if(!tbody) return;
-  const filtrados = STORE.concatenar.filter(item => !busca || norm(item.texto).includes(busca));
+  const filtrados = busca ? STORE.concatenar.filter(item => norm(item.texto).includes(busca)) : STORE.concatenar;
   if(cnt) cnt.textContent = filtrados.length + ' registros';
   if(!filtrados.length){ tbody.innerHTML = '<tr><td>Nenhum registro concatenado.</td></tr>'; return; }
   tbody.innerHTML = filtrados.map(item => `<tr><td><code style="font-family:monospace; font-size:.88rem; background:#0f172a; color:#f8fafc; padding:6px 10px; display:block; white-space:pre; border-radius:4px; border:1px solid rgba(255,255,255,0.05);">${item.texto}</code></td></tr>`).join('');
@@ -1443,7 +1535,7 @@ function renderPalletEndereco(){
   const busca = buscaEl ? norm(buscaEl.value) : '';
   const tbody = document.getElementById('tbodyPalletEndereco');
   if(!tbody) return;
-  const filtrados = STORE.palletEndereco.filter(item => !busca || norm(item.pallet).includes(busca) || norm(item.endereco).includes(busca));
+  const filtrados = busca ? STORE.palletEndereco.filter(item => norm(item.pallet).includes(busca) || norm(item.endereco).includes(busca)) : STORE.palletEndereco;
   const cnt = document.getElementById('cntPalletEndereco');
   if(cnt) cnt.textContent = filtrados.length + ' registros';
   if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="2">Nenhum dado encontrado.</td></tr>'; return; }
@@ -1495,7 +1587,13 @@ function renderValidacaoFinal() {
   const cnt = document.getElementById('cntValidacaoFinal');
   if(!tbody) return;
   
-  let filtrados = STORE.validacaoFinal.filter(v => !busca || norm(v.awb).includes(busca) || norm(v.lote).includes(busca) || norm(v.status).includes(busca));
+  let filtrados = busca ? STORE.validacaoFinal.filter(v =>
+    norm(v.awb).includes(busca) ||
+    norm(v.lote).includes(busca) ||
+    norm(v.enderecoPlanejado).includes(busca) ||
+    norm(v.enderecoSenior).includes(busca) ||
+    norm(v.status).includes(busca)
+  ) : STORE.validacaoFinal;
   if (statusFiltro === 'NAO_SUBIU') filtrados = filtrados.filter(v => norm(v.status).includes('FORA DO SENIOR') || norm(v.status).includes('DIVERGENCIA'));
   else if (statusFiltro === 'SUBIU') filtrados = filtrados.filter(v => norm(v.status).includes('NO SENIOR'));
   
